@@ -91,7 +91,7 @@ async function cloudLoadAll(){
     settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
     pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
     clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig')||'null')||'null')||clanConfig;
-    clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
+    clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests')||'[]'));
     cloudReady=true;
     return true;
   }catch(e){
@@ -113,11 +113,7 @@ async function cloudSave(name,value){
     return true;
   }catch(e){console.error('Cloud save error for '+name+':',e);return false;}
 }
-
-function cloudSyncKey(name,value){
-  if(!CLOUD_ENABLED)return;
-  clearTimeout(cloudWriteTimer);
-  cloudWriteTimer=setTimeout(()=>cloudSave(name,value),250);
+cloudWriteTimer=setTimeout(()=>cloudSave(name,value),250);
 }
 
 async function pushAllToCloud(){
@@ -161,7 +157,7 @@ async function bootstrapCloud(){
     const {data,error}=await supabaseClient.from('app_store').select('key,value');
     if(error)throw error;
     const rows=Array.isArray(data)?data.filter(row=>CLOUD_KEYS.includes(row.key)):[];
-    
+
     if(rows.length>0){
       for(const row of rows){
         localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
