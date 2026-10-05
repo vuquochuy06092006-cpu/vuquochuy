@@ -23,6 +23,7 @@ main{max-width:1400px;margin:20px auto;padding:0 16px}.cards{display:grid;grid-t
 <section id="expiring" class="hidden"><h2>🔔 Sắp hết hạn</h2><div id="expireTable"></div></section>
 <section id="notice" class="hidden"><h2>📢 Thông báo</h2><div id="noticeContent"></div><div id="noticeAdmin" class="hidden"><h3>Đăng / sửa thông báo</h3><textarea id="noticeText" rows="5" style="width:100%" placeholder="Nội dung thông báo..."></textarea><br><button class="primary" onclick="saveNotice()">Lưu thông báo</button><button onclick="clearNotice()">Xóa thông báo</button></div></section>
 <section id="transfer" class="hidden"><h2>💳 Chuyển khoản</h2><div class="card"><div id="paymentContent"></div><div id="paymentAdmin" class="hidden"><h3>Cài đặt thông tin chuyển khoản</h3><div class="grid"><label>Ngân hàng / ví<input id="bankName"></label><label>Số tài khoản / số điện thoại<input id="bankNumber"></label><label>Chủ tài khoản<input id="bankOwner"></label><label>Nội dung chuyển khoản<input id="bankContent"></label></div><p>Ảnh mã QR:</p><input type="file" id="qrFile" accept="image/*" onchange="loadQr(this)"><img id="qrPreview" class="preview-qr hidden"><br><button class="primary" onclick="savePayment()">Lưu thông tin</button></div></div></section>
+
 <section id="accounts" class="hidden"><h2>👥 Tài khoản truy cập</h2><p class="small">Admin quản lý tài khoản. Nhân viên chỉ xem đơn, không thấy TK/MK.</p><div id="accountTable"></div><div class="card"><h3>Thêm tài khoản</h3><div class="grid"><label>Tên đăng nhập<input id="newUser"></label><label>Mật khẩu<input id="newPass" type="password"></label><label>Vai trò<select id="newRole"><option value="user">Nhân viên</option><option value="admin">Admin</option></select></label></div><br><button class="primary" onclick="addAccount()">Thêm tài khoản</button></div></section>
 <section id="settings" class="hidden"><h2>⚙️ Giao diện & liên hệ</h2><div class="settings-grid"><div class="card"><h3>Giao diện</h3><button onclick="setTheme('light')">☀️ Sáng</button> <button onclick="setTheme('dark')">🌙 Tối</button></div><div class="card"><h3>Facebook của bạn</h3><input id="fbUrl" style="width:100%" placeholder="https://facebook.com/..."> <br><br><button class="primary" onclick="saveFb()">Lưu link Facebook</button><p class="small">Nút Facebook sẽ xuất hiện để mọi người bấm và chuyển thẳng tới trang của bạn.</p></div></div><div class="card" style="margin-top:14px"><h3>Đổi mật khẩu tài khoản đang đăng nhập</h3><div class="passwrap"><input id="oldPass" type="password" placeholder="Mật khẩu hiện tại"><button class="eye" type="button" onclick="togglePass('oldPass',this)">👁️</button></div><div class="passwrap"><input id="changePass" type="password" placeholder="Mật khẩu mới"><button class="eye" type="button" onclick="togglePass('changePass',this)">👁️</button></div><button class="primary" onclick="changeMyPassword()">Đổi mật khẩu</button></div></section>
 </main></div>
@@ -31,6 +32,13 @@ main{max-width:1400px;margin:20px auto;padding:0 16px}.cards{display:grid;grid-t
 <script>
 const KEY='htth_quoc_huy_';
 
+/* ================= CLOUD SYNC CONFIG =================
+   1) Create a free Supabase project.
+   2) Run supabase_setup.sql supplied with this package.
+   3) Paste your Project URL and anon key below.
+   The site continues to use localStorage as a fast local cache,
+   while these keys are synchronized to the shared cloud table.
+*/
 const SUPABASE_URL='https://omxwswokznzwedgmarpi.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_CVVDwSQihYLwuPofIhIC4Q_a5R3sM0v';
 const CLOUD_ENABLED=!SUPABASE_URL.startsWith('PASTE_') && !SUPABASE_ANON_KEY.startsWith('PASTE_');
@@ -40,6 +48,7 @@ const CLOUD_KEYS=['orders','accounts','settings','pendingOrders','clanConfig','c
 let current=null, editIndex=-1;
 let orders=JSON.parse(localStorage.getItem(KEY+'orders')||'[]');
 let accounts=JSON.parse(localStorage.getItem(KEY+'accounts')||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
+// Chuyển tài khoản Admin mặc định cũ sang thông tin đăng nhập mới, giữ nguyên các dữ liệu khác.
 const oldAdmin=accounts.find(x=>x.admin===true&&x.u==='admin');
 if(oldAdmin){oldAdmin.u='huy06';oldAdmin.p='vuhuy123';localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));}
 let settings=JSON.parse(localStorage.getItem(KEY+'settings')||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
@@ -55,12 +64,11 @@ clanRequests=clanRequests.map(x=>({...x,type:x.type||'clan',start:x.start||new D
 if(!orders.length) orders=[{tk:'demo123',mk:'matkhau',char:'Hắc Long',server:'1',fb:'Nguyễn Văn A',slot:2,tab:'Tab 1',start:new Date().toISOString().slice(0,10),months:1}];
 for(let m=1;m<=12;m++){let o=document.createElement('option');o.value=m;o.textContent=m===12?'12 tháng (1 năm)':m+' tháng';fPlan.appendChild(o)}
 for(let m=1;m<=12;m++){let o=document.createElement('option');o.value=m;o.textContent=m+' tháng - '+(m*6000).toLocaleString('vi-VN')+'đ';pPlan.appendChild(o)}
-applyTheme(); renderNotice(); renderPayment();
-setInterval(()=>{if(current&&CLOUD_ENABLED)refreshCloudAndRender()},30000);
-bootstrapCloud();
-
 let cloudWriteTimer=null;
 let cloudReady=false;
+
+applyTheme(); renderNotice(); renderPayment();
+setInterval(()=>{if(current&&CLOUD_ENABLED)refreshCloudAndRender()},30000);
 
 function cloudKey(name){return KEY+name}
 
@@ -69,20 +77,57 @@ async function cloudLoadAll(){
   try{
     const {data,error}=await supabaseClient.from('app_store').select('key,value');
     if(error)throw error;
-    if(!Array.isArray(data))return false;
+    if(!Array.isArray(data)){cloudReady=false;return false;}
+
     const rows=data.filter(row=>CLOUD_KEYS.includes(row.key));
-    if(rows.length===0){cloudReady=true;return false;}
-    for(const row of rows){
-      localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
-    }
-    orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
-    accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
-    settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
-    pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
-    clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig'))||'null')||clanConfig;
-    clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
+    const byKey=Object.fromEntries(rows.map(row=>[row.key,row.value]));
+    let needPush=[];
+
+    const useCloud=(name,localValue)=>{
+      if(!Object.prototype.hasOwnProperty.call(byKey,name)){
+        needPush.push(name);
+        return localValue;
+      }
+
+      const cloudValue=byKey[name];
+
+      // Không bao giờ để cloud rỗng xoá dữ liệu local đang có.
+      if(Array.isArray(cloudValue)){
+        if(cloudValue.length===0 && Array.isArray(localValue) && localValue.length>0){
+          needPush.push(name);
+          return localValue;
+        }
+      }else if((cloudValue===null || cloudValue===undefined || cloudValue==='') && localValue){
+        needPush.push(name);
+        return localValue;
+      }
+
+      localStorage.setItem(cloudKey(name),JSON.stringify(cloudValue));
+      return cloudValue;
+    };
+
+    orders=useCloud('orders',orders);
+    accounts=useCloud('accounts',accounts);
+    settings=useCloud('settings',settings);
+    pendingOrders=useCloud('pendingOrders',pendingOrders);
+    clanConfig=useCloud('clanConfig',clanConfig);
+    clanRequests=useCloud('clanRequests',clanRequests);
+
+    localStorage.setItem(KEY+'orders',JSON.stringify(orders));
+    localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));
+    localStorage.setItem(KEY+'settings',JSON.stringify(settings));
+    localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));
+    localStorage.setItem(KEY+'clanConfig',JSON.stringify(clanConfig));
+    localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));
+
     cloudReady=true;
-    return true;
+
+    for(const name of needPush){
+      const value={orders,accounts,settings,pendingOrders,clanConfig,clanRequests}[name];
+      await cloudSave(name,value);
+    }
+
+    return rows.length>0;
   }catch(e){
     console.error('Cloud load error:',e);
     cloudReady=false;
@@ -100,18 +145,23 @@ async function cloudSave(name,value){
     },{onConflict:'key'});
     if(error)throw error;
     return true;
-  }catch(e){console.error('Cloud save error for '+name+':',e);return false;}
+  }catch(e){
+    console.error('Cloud save error for '+name+':',e);
+    return false;
+  }
 }
 
 function cloudSyncKey(name,value){
   if(!CLOUD_ENABLED)return;
-  clearTimeout(cloudWriteTimer);
+
+  // Ghi local ngay lập tức; cloud ghi sau một chút để tránh nhiều request.
   cloudWriteTimer=setTimeout(()=>cloudSave(name,value),250);
 }
 
 async function pushAllToCloud(){
   if(!CLOUD_ENABLED)return;
   cloudReady=true;
+
   await Promise.all([
     cloudSave('orders',orders),
     cloudSave('accounts',accounts),
@@ -124,11 +174,14 @@ async function pushAllToCloud(){
 
 async function refreshCloudAndRender(){
   if(!CLOUD_ENABLED)return;
+
   const loaded=await cloudLoadAll();
   if(!loaded)return;
+
   applyTheme();
   renderNotice();
   renderPayment();
+
   if(current){
     if(document.getElementById('personal') && !document.getElementById('personal').classList.contains('hidden'))renderPersonal();
     if(document.getElementById('pending') && !document.getElementById('pending').classList.contains('hidden'))renderPending();
@@ -137,177 +190,968 @@ async function refreshCloudAndRender(){
 }
 
 async function bootstrapCloud(){
-  if(!CLOUD_ENABLED){
-    console.warn('Supabase chưa được cấu hình. Website đang chạy ở chế độ local.');
-    applyTheme(); renderNotice(); renderPayment(); restoreLogin();
-    return;
-  }
-  try{
-    const {data,error}=await supabaseClient.from('app_store').select('key,value');
-    if(error)throw error;
-    const rows=Array.isArray(data)?data.filter(row=>CLOUD_KEYS.includes(row.key)):[];
-    if(rows.length>0){
-      for(const row of rows){
-        localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
-      }
-      orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
-      accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
-      settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||settings;
-      pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
-      clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig'))||'null')||clanConfig;
-      clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
-      cloudReady=true;
-    }else{
-      cloudReady=true;
-      await pushAllToCloud();
-    }
-  }catch(e){
-    console.error('Cloud bootstrap error:',e);
-    cloudReady=false;
-  }
+  // Luôn render giao diện local trước để Supabase lỗi/chậm cũng không làm web trắng.
   applyTheme();
   renderNotice();
   renderPayment();
   restoreLogin();
+
+  if(!CLOUD_ENABLED){
+    console.warn('Supabase chưa được cấu hình. Website đang chạy ở chế độ local.');
+    return;
+  }
+
+  try{
+    await cloudLoadAll();
+
+    // Sau khi load, render lại bằng dữ liệu đã được đồng bộ.
+    applyTheme();
+    renderNotice();
+    renderPayment();
+    restoreLogin();
+  }catch(e){
+    console.error('Cloud bootstrap error:',e);
+    cloudReady=false;
+  }
 }
 
 function openRegister(){regUser.value='';regPass.value='';regPass2.value='';regMsg.textContent='';registerModal.classList.remove('hidden')}
 function closeRegister(){registerModal.classList.add('hidden')}
-function registerAccount(){const u=regUser.value.trim(),p=regPass.value,p2=regPass2.value;regMsg.style.color='#dc2626';if(!/^[A-Za-z0-9_.-]{3,30}$/.test(u))return regMsg.textContent='Tên tài khoản 3-30 ký tự, chỉ dùng chữ, số, ., _, -';if(!p||p.length<4)return regMsg.textContent='Mật khẩu phải có ít nhất 4 ký tự';if(p!==p2)return regMsg.textContent='Mật khẩu nhập lại không khớp';if(accounts.some(a=>a.u.toLowerCase()===u.toLowerCase()))return regMsg.textContent='Tên tài khoản đã tồn tại';accounts.push({u,p,admin:false});saveAccounts();regMsg.style.color='#166534';regMsg.textContent='Tạo tài khoản thành công. Bạn có thể đăng nhập ngay.';setTimeout(()=>{loginUser.value=u;loginPass.value='';closeRegister()},500)}
-function recoverAccounts(){const u=prompt('Nhập TÊN TÀI KHOẢN cần khôi phục:');if(!u)return;const a=accounts.find(x=>x.u===u.trim());if(!a){loginMsg.textContent='Không tìm thấy tài khoản này';return}const np=a.admin===true?'vuhuy123':'user123';a.p=np;saveAccounts();loginUser.value=a.u;loginPass.value=np;loginMsg.style.color='#166534';loginMsg.textContent='Đã khôi phục mật khẩu cho '+a.u+'. Mật khẩu mới: '+np}
+
+function registerAccount(){
+  const u=regUser.value.trim(),p=regPass.value,p2=regPass2.value;
+  regMsg.style.color='#dc2626';
+  if(!/^[A-Za-z0-9_.-]{3,30}$/.test(u))return regMsg.textContent='Tên tài khoản 3-30 ký tự, chỉ dùng chữ, số, ., _, -';
+  if(!p||p.length<4)return regMsg.textContent='Mật khẩu phải có ít nhất 4 ký tự';
+  if(p!==p2)return regMsg.textContent='Mật khẩu nhập lại không khớp';
+  if(accounts.some(a=>a.u.toLowerCase()===u.toLowerCase()))return regMsg.textContent='Tên tài khoản đã tồn tại';
+
+  accounts.push({u,p,admin:false});
+  saveAccounts();
+
+  regMsg.style.color='#166534';
+  regMsg.textContent='Tạo tài khoản thành công. Bạn có thể đăng nhập ngay.';
+  setTimeout(()=>{
+    loginUser.value=u;
+    loginPass.value='';
+    closeRegister();
+  },500);
+}
+
+function recoverAccounts(){
+  const u=prompt('Nhập TÊN TÀI KHOẢN cần khôi phục:');
+  if(!u)return;
+
+  const a=accounts.find(x=>x.u===u.trim());
+  if(!a){
+    loginMsg.textContent='Không tìm thấy tài khoản này';
+    return;
+  }
+
+  const np=a.admin===true?'vuhuy123':'user123';
+  a.p=np;
+  saveAccounts();
+  loginUser.value=a.u;
+  loginPass.value=np;
+  loginMsg.style.color='#166534';
+  loginMsg.textContent='Đã khôi phục mật khẩu cho '+a.u+'. Mật khẩu mới: '+np;
+}
+
 async function doLogin(){
   const u=loginUser.value.trim(),p=loginPass.value;
+
+  // Luôn thử tải cloud trước khi kiểm tra tài khoản.
+  // Nếu cloud lỗi thì cloudLoadAll trả false và vẫn dùng dữ liệu local.
   if(CLOUD_ENABLED)await cloudLoadAll();
+
   const a=accounts.find(x=>x.u===u&&x.p===p);
-  if(!a){loginMsg.textContent='Sai tài khoản hoặc mật khẩu';return}
+
+  if(!a){
+    loginMsg.textContent='Sai tài khoản hoặc mật khẩu';
+    return;
+  }
+
   current={...a};
-  localStorage.setItem(KEY+'session',JSON.stringify({u:current.u,admin:!!current.admin}));
-  login.classList.add('hidden');app.classList.remove('hidden');
+
+  localStorage.setItem(KEY+'session',JSON.stringify({
+    u:current.u,
+    admin:!!current.admin
+  }));
+
+  login.classList.add('hidden');
+  app.classList.remove('hidden');
+
   role.textContent=current.admin?'👑 Admin: '+current.u:'👤 Tài khoản: '+current.u;
-  adminNav.classList.toggle('hidden',!current.admin);settingsNav.classList.toggle('hidden',!current.admin);
-  addBtn.classList.toggle('hidden',!current.admin);noticeAdmin.classList.toggle('hidden',!current.admin);
-  paymentAdmin.classList.toggle('hidden',!current.admin);pendingNav.classList.toggle('hidden',!current.admin);
-  ordersNav.classList.toggle('hidden',!current.admin);personalNav.classList.toggle('hidden',current.admin);
-  clanNav.classList.toggle('hidden',current.admin);clanManageNav.classList.toggle('hidden',!current.admin);
-  clanRequestsWrap.classList.toggle('hidden',current.admin);globalFb.classList.toggle('hidden',!settings.fb);
-  showPage(current.admin?'dashboard':'personal');render();
+
+  adminNav.classList.toggle('hidden',!current.admin);
+  settingsNav.classList.toggle('hidden',!current.admin);
+  addBtn.classList.toggle('hidden',!current.admin);
+  noticeAdmin.classList.toggle('hidden',!current.admin);
+  paymentAdmin.classList.toggle('hidden',!current.admin);
+  pendingNav.classList.toggle('hidden',!current.admin);
+  ordersNav.classList.toggle('hidden',!current.admin);
+  personalNav.classList.toggle('hidden',current.admin);
+  clanNav.classList.toggle('hidden',current.admin);
+  clanManageNav.classList.toggle('hidden',!current.admin);
+  clanRequestsWrap.classList.toggle('hidden',current.admin);
+  globalFb.classList.toggle('hidden',!settings.fb);
+
+  showPage(current.admin?'dashboard':'personal');
+  render();
 }
+
 function restoreLogin(){
   try{
     const s=JSON.parse(localStorage.getItem(KEY+'session')||'null');
     if(!s)return;
+
     const a=accounts.find(x=>x.u===s.u && !!x.admin===!!s.admin);
+
     if(a){
       current={...a};
-      login.classList.add('hidden');app.classList.remove('hidden');
+
+      login.classList.add('hidden');
+      app.classList.remove('hidden');
+
       role.textContent=current.admin?'👑 Admin: '+current.u:'👤 Tài khoản: '+current.u;
-      adminNav.classList.toggle('hidden',!current.admin);settingsNav.classList.toggle('hidden',!current.admin);
-      addBtn.classList.toggle('hidden',!current.admin);noticeAdmin.classList.toggle('hidden',!current.admin);
-      paymentAdmin.classList.toggle('hidden',!current.admin);pendingNav.classList.toggle('hidden',!current.admin);
-      ordersNav.classList.toggle('hidden',!current.admin);personalNav.classList.toggle('hidden',current.admin);
-      clanNav.classList.toggle('hidden',current.admin);clanManageNav.classList.toggle('hidden',!current.admin);
-      clanRequestsWrap.classList.toggle('hidden',current.admin);globalFb.classList.toggle('hidden',!settings.fb);
-      showPage(current.admin?'dashboard':'personal');render();
+
+      adminNav.classList.toggle('hidden',!current.admin);
+      settingsNav.classList.toggle('hidden',!current.admin);
+      addBtn.classList.toggle('hidden',!current.admin);
+      noticeAdmin.classList.toggle('hidden',!current.admin);
+      paymentAdmin.classList.toggle('hidden',!current.admin);
+      pendingNav.classList.toggle('hidden',!current.admin);
+      ordersNav.classList.toggle('hidden',!current.admin);
+      personalNav.classList.toggle('hidden',current.admin);
+      clanNav.classList.toggle('hidden',current.admin);
+      clanManageNav.classList.toggle('hidden',!current.admin);
+      clanRequestsWrap.classList.toggle('hidden',current.admin);
+      globalFb.classList.toggle('hidden',!settings.fb);
+
+      showPage(current.admin?'dashboard':'personal');
+      render();
     }
-  }catch(e){}
+  }catch(e){
+    console.error('Restore login error:',e);
+  }
 }
-function logout(){localStorage.removeItem(KEY+'session');location.reload()}
-function showPage(id){['dashboard','pending','orders','personal','clan','clanManage','expiring','notice','transfer','accounts','settings'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));if(id==='pending')renderPending();if(id==='expiring')renderExpiring();if(id==='orders'){showOrderTab('up');render();}if(id==='personal')renderPersonal();if(id==='clan')renderClan();if(id==='clanManage')renderClanManage();if(id==='notice')renderNotice();if(id==='transfer')renderPayment();if(id==='accounts')renderAccounts();if(id==='settings'){fbUrl.value=settings.fb||''}}
-function endDate(o){let d=new Date(o.start+'T00:00:00');d.setMonth(d.getMonth()+Number(o.months));return d}function clanEndDate(o){let d=new Date(o.start+'T00:00:00');d.setMonth(d.getMonth()+Number(o.months));return d}function showOrderTab(tab){if(!current?.admin)return;orderUpPanel.classList.toggle('hidden',tab!=='up');orderClanPanel.classList.toggle('hidden',tab!=='clan');if(tab==='up')render();else renderClanOrdersTable()}function daysLeft(o){return Math.ceil((endDate(o)-new Date())/86400000)}function status(o){let d=daysLeft(o);if(d<0)return ['Đã hết hạn','expired'];if(d<=3)return ['🚨 Hết hạn trong '+d+' ngày','warn'];if(d<=7)return ['⚠️ Sắp hết hạn','warn'];return ['🟢 Đang up','ok']}function fmt(d){return new Date(d).toLocaleDateString('vi-VN')}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function render(){let q=(search?.value||'').toLowerCase();let arr=orders.filter(o=>(o.tk+' '+o.char+' '+o.fb+' '+o.server).toLowerCase().includes(q));let rows=arr.map(o=>{let s=status(o),idx=orders.indexOf(o);return `<tr><td>${idx+1}</td>${current.admin?`<td>${esc(o.tk)}</td><td>${esc(o.mk)}</td>`:''}<td>${esc(o.char)}</td><td>Sever ${esc(o.server||'1')}</td><td>${esc(o.slot)}</td><td>${esc(o.tab)}</td><td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td><td>${fmt(o.start)}</td><td>${fmt(endDate(o))}</td><td><span class="badge ${s[1]}">${s[0]}</span></td>${current.admin?`<td><button onclick="editOrder(${idx})">Sửa</button> <button class="danger" onclick="del(${idx})">Xóa</button></td>`:''}</tr>`}).join('');let head=`<tr><th>#</th>${current.admin?'<th>TK</th><th>MK</th>':''}<th>Tên nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th><th>Bắt đầu</th><th>Hết hạn</th><th>Trạng thái</th>${current.admin?'<th>Thao tác</th>':''}</tr>`;table.innerHTML='<table>'+head+rows+'</table>';updateStats()}
-function updateStats(){total.textContent=orders.length;adminPendingNotice.innerHTML=current?.admin&&(pendingOrders.length+clanRequests.filter(x=>x.status==='Chờ duyệt').length)?`<div class="notice"><b>🕐 Có ${pendingOrders.length+clanRequests.filter(x=>x.status==='Chờ duyệt').length} đơn đang chờ duyệt.</b> <button onclick="showPage('pending')">Xem đơn</button></div>`:'';active.textContent=orders.filter(o=>daysLeft(o)>=0).length;soon.textContent=orders.filter(o=>daysLeft(o)>=0&&daysLeft(o)<=7).length;expired.textContent=orders.filter(o=>daysLeft(o)<0).length;dashboardNotice.innerHTML=settings.notice?`<div class="notice"><h3>📢 ${esc(settings.notice)}</h3></div>`:''}
-function renderExpiring(){let arr=orders.filter(o=>daysLeft(o)>=0&&daysLeft(o)<=7);expireTable.innerHTML=arr.length?'<table><tr><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Hết hạn</th><th>Còn</th></tr>'+arr.map(o=>`<tr><td>${esc(o.char)}</td><td>Sever ${esc(o.server||'1')}</td><td>${esc(o.fb)}</td><td>${fmt(endDate(o))}</td><td>⚠️ ${daysLeft(o)} ngày</td></tr>`).join('')+'</table>':'<div class="card">Hiện chưa có đơn nào hết hạn trong 7 ngày tới.</div>'}
-function openModal(idx=-1){editIndex=idx;modalTitle.textContent=idx<0?'Thêm đơn up':'Sửa đơn up';let o=idx<0?{slot:1,tab:'Tab 1',server:'1',months:1,start:new Date().toISOString().slice(0,10)}:orders[idx];fTk.value=o.tk||'';fMk.value=o.mk||'';fChar.value=o.char||'';fServer.value=o.server||'1';fSlot.value=o.slot||1;fTab.value=o.tab||'Tab 1';fFb.value=o.fb||'';fStart.value=o.start||'';fPlan.value=o.months||1;modal.classList.remove('hidden')}
-function editOrder(i){openModal(i)}function closeModal(){modal.classList.add('hidden');editIndex=-1}
-function saveOrder(){let o={tk:fTk.value.trim(),mk:fMk.value,char:fChar.value.trim(),server:fServer.value,slot:fSlot.value,tab:fTab.value.trim(),fb:fFb.value.trim(),start:fStart.value,months:Number(fPlan.value)};if(!o.tk||!o.mk||!o.char||!o.start){alert('Vui lòng nhập TK, MK, nhân vật và ngày bắt đầu');return}if(editIndex<0)orders.push(o);else orders[editIndex]=o;localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);closeModal();render()}
-function del(i){if(confirm('Xóa đơn này?')){orders.splice(i,1);localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);render()}}
-function togglePass(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁️':'🙈'}
-function savePending(){localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));cloudSyncKey('pendingOrders',pendingOrders)}
-function submitUpOrder(){if(current.admin)return alert('Admin không cần gửi đơn UP');let o={id:Date.now(),type:'up',owner:current.u,tk:pTk.value.trim(),mk:pMk.value,char:pChar.value.trim(),server:pServer.value,slot:1,tab:'',fb:pFb.value.trim(),months:Number(pPlan.value),start:new Date().toISOString().slice(0,10),submitted:new Date().toISOString(),status:'Chờ duyệt'};if(!o.tk||!o.mk||!o.char)return alert('Vui lòng nhập TK, MK và tên nhân vật');pendingOrders.push(o);savePending();pTk.value=pMk.value=pChar.value=pFb.value='';alert('Đã gửi đơn, đang chờ Admin duyệt');renderPersonal()}
-function renderPersonal(){
-  if(!current||current.admin)return;
-  myUsername.textContent=current.u;
-  let minePending=pendingOrders.filter(o=>o.owner===current.u);
-  let mineActive=orders.filter(o=>o.owner===current.u);
-  let pendingHtml=minePending.length
-    ? '<h4>📦 Đơn đang chờ duyệt</h4><table><tr><th>TK</th><th>MK</th><th>Tên nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+
-      minePending.map(o=>{
-        let start=o.start||o.submitted||new Date().toISOString().slice(0,10);
-        let end=orderEndDate(o,start);
-        return `<tr>
-          <td>${esc(o.tk)}</td>
-          <td><div class="passwrap"><input type="password" value="${esc(o.mk)}" readonly><button class="eye" type="button" onclick="togglePassInput(this)">👁️</button></div></td>
-          <td>${esc(o.char)}</td>
-          <td>Sever ${esc(o.server||'1')}</td>
-          <td>${esc(o.slot||1)}</td>
-          <td>${esc(o.tab||'')}</td>
-          <td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td>
-          <td>${fmt(start)}</td>
-          <td>${fmt(end)}</td>
-          <td><span class="badge pending-badge">${esc(o.status||'Chờ duyệt')}</span></td>
-        </tr>`;
-      }).join('')+'</table>'
-    : '<p class="small">Chưa có đơn UP chờ duyệt.</p>';
-  let activeHtml=mineActive.length
-    ? '<h4 style="margin-top:18px">📦 Nick đã UP</h4><table><tr><th>TK</th><th>MK</th><th>Tên nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+
-      mineActive.map(o=>{
-        let st=status(o);
-        return `<tr>
-          <td>${esc(o.tk)}</td>
-          <td><div class="passwrap"><input type="password" value="${esc(o.mk)}" readonly><button class="eye" type="button" onclick="togglePassInput(this)">👁️</button></div></td>
-          <td>${esc(o.char)}</td>
-          <td>Sever ${esc(o.server||'1')}</td>
-          <td>${esc(o.slot||1)}</td>
-          <td>${esc(o.tab||'')}</td>
-          <td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td>
-          <td>${fmt(o.start)}</td>
-          <td>${fmt(endDate(o))}</td>
-          <td><span class="badge ${st[1]}">${st[0]}</span></td>
-        </tr>`;
-      }).join('')+'</table>'
-    : '<p class="small">Chưa có nick nào được duyệt để UP.</p>';
-  myUpOrders.innerHTML=pendingHtml+activeHtml;
+
+function logout(){
+  localStorage.removeItem(KEY+'session');
+  location.reload();
 }
-function orderEndDate(o,startOverride){
-  let start=startOverride||o.start||new Date().toISOString().slice(0,10);
-  let d=new Date(start);
-  d.setMonth(d.getMonth()+Number(o.months||1));
+
+function showPage(id){
+  ['dashboard','pending','orders','personal','clan','clanManage','expiring','notice','transfer','accounts','settings']
+    .forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+
+  if(id==='pending')renderPending();
+  if(id==='expiring')renderExpiring();
+
+  if(id==='orders'){
+    showOrderTab('up');
+    render();
+  }
+
+  if(id==='personal')renderPersonal();
+  if(id==='clan')renderClan();
+  if(id==='clanManage')renderClanManage();
+  if(id==='notice')renderNotice();
+  if(id==='transfer')renderPayment();
+  if(id==='accounts')renderAccounts();
+  if(id==='settings')fbUrl.value=settings.fb||'';
+}
+
+function endDate(o){
+  let d=new Date(o.start+'T00:00:00');
+  d.setMonth(d.getMonth()+Number(o.months));
   return d;
 }
-function togglePassInput(btn){
-  let input=btn.parentElement.querySelector('input');
-  if(!input)return;
-  input.type=input.type==='password'?'text':'password';
-  btn.textContent=input.type==='password'?'👁️':'🙈';
+
+function clanEndDate(o){
+  let d=new Date(o.start+'T00:00:00');
+  d.setMonth(d.getMonth()+Number(o.months));
+  return d;
 }
-function renderPending(){if(!current?.admin)return;pendingTable.innerHTML=pendingOrders.length?'<table><tr><th>TK</th><th>MK</th><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Gói</th><th>Người gửi</th><th>Trạng thái</th><th>Thao tác</th></tr>'+pendingOrders.map((o,i)=>`<tr><td>${esc(o.tk)}</td><td><div class="passwrap"><input id="pmk${i}" type="password" value="${esc(o.mk)}" readonly><button class="eye" onclick="togglePass('pmk${i}',this)">👁️</button></div></td><td>${esc(o.char)}</td><td>Sever ${esc(o.server)}</td><td>${esc(o.fb)}</td><td>${o.months} tháng</td><td>${esc(o.owner)}</td><td>${esc(o.status)}</td><td><button class="primary" onclick="approvePending(${i})">Duyệt</button> <button class="danger" onclick="rejectPending(${i})">Từ chối</button></td></tr>`).join('')+'</table>':'<div class="small">Không có đơn UP chờ duyệt.</div>';renderPendingClan();}
-function renderPendingClan(){if(!current?.admin)return;let a=clanRequests.filter(x=>x.status==='Chờ duyệt');pendingClanTable.innerHTML=a.length?'<table><tr><th>Tài khoản</th><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th>Thao tác</th></tr>'+a.map((x)=>{let i=clanRequests.indexOf(x);return `<tr><td>${esc(x.owner)}</td><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td><td><button class="primary" onclick="approveClan(${i})">Duyệt</button> <button class="danger" onclick="rejectClan(${i})">Từ chối</button></td></tr>`}).join('')+'</table>':'<div class="small">Không có đơn Clan chờ duyệt.</div>'}
-function approvePending(i){let p=pendingOrders[i];let o={tk:p.tk,mk:p.mk,char:p.char,server:p.server,fb:p.fb,slot:p.slot||1,tab:p.tab||'',start:p.start||new Date().toISOString().slice(0,10),months:p.months,owner:p.owner};orders.push(o);pendingOrders.splice(i,1);localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);savePending();renderPending();render();alert('Đã duyệt và chuyển tự động sang Quản lý đơn UP')}
-function rejectPending(i){if(!confirm('Từ chối đơn UP này?'))return;pendingOrders.splice(i,1);savePending();renderPending()}
-function saveClan(){localStorage.setItem(KEY+'clanConfig',JSON.stringify(clanConfig));cloudSyncKey('clanConfig',clanConfig)}
-function clanPrice(m){return Number(clanConfig.price||5000)*m}
-function renderClan(){if(current.admin)return;renderClanUser();renderMyClanRequests()}
-function renderClanUser(){let c=clanConfig.clans;let cards=Object.entries(c).filter(([,x])=>x.available).map(([id,x])=>{let chips=defaultClanFactions.map(f=>`<span class="badge ${x.factions?.[f.id]?'ok':'muted'}" style="margin:3px;display:inline-block">${x.factions?.[f.id]?'🟢':'🔴'} ${f.name} ${x.factions?.[f.id]?'Còn chỗ':'Đã full'}</span>`).join('');return `<div class="clan-card">${x.img?`<img src="${x.img}" alt="${esc(x.name)}">`:''}<h3>${esc(x.name)}</h3><div class="notice"><b>📢 Thông báo</b><br>${esc(x.notice||'Chưa có thông báo.').replace(/\n/g,'<br>')}</div><div><b>Phái:</b><div style="margin:7px 0 12px">${chips}</div></div><button class="primary" onclick="chooseClan('${id}')">Chọn Clan</button></div>`}).join('');clanUserView.innerHTML=cards?'<div class="clan-grid">'+cards+'</div>':'<div class="card">Hiện chưa có Clan đang cho thuê.</div>'}
-function chooseClan(clanId){let c=clanConfig.clans[clanId];let factions=defaultClanFactions.filter(x=>c.factions?.[x.id]);if(!factions.length)return alert('Clan này hiện đã FULL tất cả phái.');let char=prompt('Nhập tên nhân vật:','');if(!char)return;let fb=prompt('Nhập Facebook:','');if(!fb)return;let opts=factions.map((x,i)=>`${i+1}. ${x.name} — Còn chỗ`).join('\n');let n=Number(prompt('Chọn phái bằng số:\n'+opts,'1'));if(!Number.isInteger(n)||n<1||n>factions.length)return;let f=factions[n-1];let m=Number(prompt('Nhập số tháng thuê (1-12):','1'));if(!Number.isInteger(m)||m<1||m>12)return alert('Thời gian phải từ 1 đến 12 tháng');let price=clanPrice(m),start=new Date().toISOString().slice(0,10);if(confirm(`${c.name}\nNhân vật: ${char}\nPhái: ${f.name}\n${m} tháng = ${price.toLocaleString('vi-VN')}đ\nBắt đầu: ${fmt(start)}\nKết thúc: ${fmt(clanEndDate({start,months:m}))}\n\nGửi đơn chờ Admin duyệt?`)){clanRequests.push({id:Date.now(),type:'clan',owner:current.u,char,fb,clanId,clanName:c.name,factionId:f.id,factionName:f.name,months:m,price,start,status:'Chờ duyệt'});localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderMyClanRequests();alert('Đã gửi đơn thuê Clan, đang chờ Admin duyệt')}}
-function renderMyClanRequests(){let a=clanRequests.filter(x=>x.owner===current.u);myClanRequests.innerHTML=a.length?'<table><tr><th>Clan</th><th>Phái</th><th>Thời gian</th><th>Giá</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.clanName)}</td><td>${esc(x.factionName||x.clanName)}</td><td>${x.months} tháng</td><td>${x.price.toLocaleString('vi-VN')}đ</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<p class="small">Chưa có yêu cầu thuê Clan.</p>'}
-function renderClanManage(){if(!current?.admin)return;clanAdmin.innerHTML='<div class="card"><h3>⚙️ Sửa cho thuê Clan</h3><p class="small">Admin có thể đóng/mở từng Clan, cập nhật ảnh + thông báo và đánh dấu từng phái là <b>Đang còn</b> hoặc <b>Đã full</b>. Người thuê sẽ thấy đúng thông tin này.</p><label>Giá mỗi tháng <input id="clanPriceInput" type="number" value="'+clanConfig.price+'"> đ/tháng</label><p class="small">Giá mặc định 5.000đ/tháng, tự nhân theo số tháng đến 12 tháng.</p><div class="clan-grid">'+Object.entries(clanConfig.clans).map(([id,x])=>`<div class="clan-card"><h3>${esc(x.name)}</h3><label>📢 Thông báo cho người thuê<textarea id="notice_${id}" rows="4" style="width:100%" placeholder="Ví dụ: Clan đang tuyển Xạ thủ, bảo trì lúc 22h...">${esc(x.notice||'')}</textarea></label><p><b>🖼️ Ảnh Clan</b></p><input type="file" accept="image/*" onchange="loadClanGroupImage(this,'${id}')">${x.img?`<img src="${x.img}" alt="Ảnh ${esc(x.name)}"><br><button type="button" onclick="removeClanGroupImage('${id}')">Xóa ảnh</button>`:'<p class="small">Chưa có ảnh. Chọn ảnh để người thuê nhìn thấy.</p>'}<br><label><input type="checkbox" ${x.available?'checked':''} onchange="clanConfig.clans['${id}'].available=this.checked;saveClan();renderClanManage()"> 🟢 Cho phép thuê Clan này</label><hr><b>Trạng thái từng phái</b><div style="margin-top:8px">${defaultClanFactions.map(f=>`<label style="display:block;margin:7px 0"><input type="checkbox" ${x.factions?.[f.id]?'checked':''} onchange="setClanFaction('${id}','${f.id}',this.checked)"> ${esc(f.name)} — <b>${x.factions?.[f.id]?'Còn chỗ':'Đã full'}</b></label>`).join('')}</div></div>`).join('')+'</div><br><button class="primary" onclick="saveClanConfig()">💾 Lưu cấu hình Clan</button></div>';clanManageRequests.innerHTML=renderClanAdminRequests()}
-function setClanFaction(clanId,factionId,available){clanConfig.clans[clanId].factions[factionId]=available;saveClan();renderClanManage()}
-function renderClanAdminRequests(){let a=clanRequests;return a.length?'<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<p>Chưa có đơn.</p>'}function renderClanOrdersTable(){let a=clanRequests;clanOrdersTable.innerHTML=a.length?'<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<div class="small">Chưa có đơn thuê Clan.</div>'}
-function saveClanConfig(){clanConfig.price=Math.max(0,Number(clanPriceInput.value)||5000);Object.keys(clanConfig.clans).forEach(id=>{let el=document.getElementById('notice_'+id);if(el)clanConfig.clans[id].notice=el.value.trim()});saveClan();renderClanManage();alert('Đã lưu cấu hình Clan')}
-function loadClanGroupImage(input,id){let f=input.files[0];if(!f)return;if(f.size>3*1024*1024)return alert('Ảnh quá lớn. Vui lòng chọn ảnh dưới 3MB.');let r=new FileReader();r.onload=()=>{clanConfig.clans[id].img=r.result;saveClan();renderClanManage();alert('Đã cập nhật ảnh '+clanConfig.clans[id].name+'. Người thuê sẽ thấy ảnh này.')};r.readAsDataURL(f)}
-function removeClanGroupImage(id){clanConfig.clans[id].img='';saveClan();renderClanManage()}
-function approveClan(i){clanRequests[i].status='Đã duyệt';localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderPending();renderClanManage()}
-function rejectClan(i){clanRequests[i].status='Từ chối';localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderPending();renderClanManage()}
-function renderNotice(){noticeContent.innerHTML=settings.notice?`<div class="notice"><h3>📢 Thông báo từ HTTH UP THUÊ QUỐC HUY</h3><div>${esc(settings.notice).replace(/\n/g,'<br>')}</div></div>`:'<div class="card">Chưa có thông báo.</div>';if(current)noticeAdmin.classList.toggle('hidden',!current.admin)}function saveNotice(){settings.notice=noticeText.value.trim();saveSettings();renderNotice();alert('Đã lưu thông báo')}function clearNotice(){settings.notice='';saveSettings();renderNotice()}
-function renderPayment(){paymentContent.innerHTML=`<h3>Thông tin chuyển khoản</h3>${settings.bank?`<p><b>Ngân hàng / ví:</b> ${esc(settings.bank)}</p>`:''}${settings.number?`<p><b>Số tài khoản / SĐT:</b> ${esc(settings.number)}</p>`:''}${settings.owner?`<p><b>Chủ tài khoản:</b> ${esc(settings.owner)}</p>`:''}${settings.content?`<p><b>Nội dung:</b> ${esc(settings.content)}</p>`:''}${settings.qr?`<img src="${settings.qr}" class="preview-qr">`:''}${!settings.bank&&!settings.number&&!settings.qr?'<p>Chưa cài đặt thông tin chuyển khoản.</p>':''}`;if(current&&current.admin){bankName.value=settings.bank||'';bankNumber.value=settings.number||'';bankOwner.value=settings.owner||'';bankContent.value=settings.content||'';if(settings.qr){qrPreview.src=settings.qr;qrPreview.classList.remove('hidden')}}}
-function loadQr(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{settings.qr=r.result;qrPreview.src=r.result;qrPreview.classList.remove('hidden')};r.readAsDataURL(f)}function savePayment(){settings.bank=bankName.value.trim();settings.number=bankNumber.value.trim();settings.owner=bankOwner.value.trim();settings.content=bankContent.value.trim();saveSettings();renderPayment();alert('Đã lưu thông tin chuyển khoản')}
-function saveSettings(){localStorage.setItem(KEY+'settings',JSON.stringify(settings));cloudSyncKey('settings',settings)}
-function renderAccounts(){accountTable.innerHTML='<table><tr><th>Tên đăng nhập</th><th>Vai trò</th><th>Thao tác</th></tr>'+accounts.map((a,i)=>`<tr><td>${esc(a.u)}</td><td>${a.admin?'Admin':'Nhân viên'}</td><td><button onclick="resetAccountPass(${i})">Đổi MK</button>${a.u!=='admin'?` <button class="danger" onclick="deleteAccount(${i})">Xóa</button>`:''}</td></tr>`).join('')+'</table>'}
-function addAccount(){let u=newUser.value.trim(),p=newPass.value,r=newRole.value;if(!u||!p)return alert('Nhập đủ tên đăng nhập và mật khẩu');if(accounts.some(a=>a.u===u))return alert('Tên đăng nhập đã tồn tại');accounts.push({u,p,admin:r==='admin'});saveAccounts();newUser.value='';newPass.value='';renderAccounts()}
-function saveAccounts(){localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));cloudSyncKey('accounts',accounts)}function deleteAccount(i){if(confirm('Xóa tài khoản '+accounts[i].u+'?')){accounts.splice(i,1);saveAccounts();renderAccounts()}}function resetAccountPass(i){let p=prompt('Nhập mật khẩu mới cho '+accounts[i].u);if(p){accounts[i].p=p;saveAccounts();alert('Đã đổi mật khẩu')}}
-function changeMyPassword(){if(oldPass.value!==current.p)return alert('Mật khẩu hiện tại không đúng');if(!changePass.value)return alert('Nhập mật khẩu mới');let i=accounts.findIndex(a=>a.u===current.u);accounts[i].p=changePass.value;current.p=changePass.value;saveAccounts();oldPass.value='';changePass.value='';alert('Đổi mật khẩu thành công')}
-function saveFb(){settings.fb=fbUrl.value.trim();saveSettings();globalFb.classList.toggle('hidden',!settings.fb);alert('Đã lưu Facebook') }
-function openMyFacebook(){if(settings.fb)window.open(settings.fb,'_blank')}
-function setTheme(t){settings.theme=t;saveSettings();applyTheme()}function applyTheme(){document.body.classList.toggle('dark',settings.theme==='dark')}
+
+function showOrderTab(tab){
+  if(!current?.admin)return;
+
+  orderUpPanel.classList.toggle('hidden',tab!=='up');
+  orderClanPanel.classList.toggle('hidden',tab!=='clan');
+
+  if(tab==='up')render();
+  else renderClanOrdersTable();
+}
+
+function daysLeft(o){
+  return Math.ceil((endDate(o)-new Date())/86400000);
+}
+
+function status(o){
+  let d=daysLeft(o);
+  if(d<0)return ['Đã hết hạn','expired'];
+  if(d<=3)return ['🚨 Hết hạn trong '+d+' ngày','warn'];
+  if(d<=7)return ['⚠️ Sắp hết hạn','warn'];
+  return ['🟢 Đang up','ok'];
+}
+
+function fmt(d){
+  return new Date(d).toLocaleDateString('vi-VN');
+}
+
+function esc(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
+}
+
+function render(){
+  let q=(search?.value||'').toLowerCase();
+
+  let arr=orders.filter(o=>
+    (o.tk+' '+o.char+' '+o.fb+' '+o.server)
+    .toLowerCase()
+    .includes(q)
+  );
+
+  let rows=arr.map(o=>{
+    let s=status(o),idx=orders.indexOf(o);
+
+    return `<tr>
+      <td>${idx+1}</td>
+      ${current.admin?`<td>${esc(o.tk)}</td><td>${esc(o.mk)}</td>`:''}
+      <td>${esc(o.char)}</td>
+      <td>Sever ${esc(o.server||'1')}</td>
+      <td>${esc(o.slot)}</td>
+      <td>${esc(o.tab)}</td>
+      <td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td>
+      <td>${fmt(o.start)}</td>
+      <td>${fmt(endDate(o))}</td>
+      <td><span class="badge ${s[1]}">${s[0]}</span></td>
+      ${current.admin?`<td><button onclick="editOrder(${idx})">Sửa</button> <button class="danger" onclick="deleteOrder(${idx})">Xóa</button></td>`:''}
+    </tr>`;
+  }).join('');
+
+  let head=`<tr>
+    <th>#</th>
+    ${current.admin?'<th>TK</th><th>MK</th>':''}
+    <th>Nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th>
+    <th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th>
+    ${current.admin?'<th>Thao tác</th>':''}
+  </tr>`;
+
+  table.innerHTML=rows?`<table>${head}${rows}</table>`:'<div class="card">Chưa có đơn.</div>';
+
+  let activeCount=orders.filter(o=>daysLeft(o)>=0).length;
+  let soonCount=orders.filter(o=>daysLeft(o)>=0&&daysLeft(o)<=7).length;
+  let expiredCount=orders.filter(o=>daysLeft(o)<0).length;
+
+  total.textContent=orders.length;
+  active.textContent=activeCount;
+  soon.textContent=soonCount;
+  expired.textContent=expiredCount;
+
+  dashboardNotice.innerHTML=settings.notice?
+    `<div class="notice"><b>📢 ${esc(settings.notice)}</b></div>`:'';
+
+  if(current?.admin){
+    let pendingCount=pendingOrders.length;
+    adminPendingNotice.innerHTML=pendingCount?
+      `<div class="notice"><b>🕐 Có ${pendingCount} đơn UP đang chờ duyệt.</b></div>`:'';
+  }else{
+    adminPendingNotice.innerHTML='';
+  }
+}
+
+function renderPersonal(){
+  if(!current||current.admin)return;
+
+  myUsername.textContent=current.u;
+
+  let minePending=pendingOrders.filter(o=>o.owner===current.u);
+  let mineActive=orders.filter(o=>o.owner===current.u);
+
+  let html='';
+
+  if(minePending.length){
+    html+=`<h4>🕐 Đơn đang chờ duyệt</h4><table>
+      <tr><th>TK</th><th>Nhân vật</th><th>Sever</th><th>Gói</th><th>Ngày gửi</th><th>Trạng thái</th></tr>
+      ${minePending.map(o=>`<tr>
+        <td>${esc(o.tk)}</td>
+        <td>${esc(o.char)}</td>
+        <td>Sever ${esc(o.server)}</td>
+        <td>${o.months} tháng</td>
+        <td>${fmt(o.submitted||o.start)}</td>
+        <td><span class="badge pending-badge">${esc(o.status||'Chờ duyệt')}</span></td>
+      </tr>`).join('')}
+    </table>`;
+  }
+
+  if(mineActive.length){
+    html+=`<h4>🟢 Nick đang UP</h4><table>
+      <tr><th>TK</th><th>Nhân vật</th><th>Sever</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>
+      ${mineActive.map(o=>{
+        let s=status(o);
+        return `<tr>
+          <td>${esc(o.tk)}</td>
+          <td>${esc(o.char)}</td>
+          <td>Sever ${esc(o.server)}</td>
+          <td>${fmt(o.start)}</td>
+          <td>${fmt(endDate(o))}</td>
+          <td><span class="badge ${s[1]}">${s[0]}</span></td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+  }
+
+  if(!minePending.length&&!mineActive.length){
+    html='<p class="small">Bạn chưa có đơn UP nào.</p>';
+  }
+
+  myUpOrders.innerHTML=html;
+}
+
+function renderPending(){
+  if(!current?.admin)return;
+
+  pendingTable.innerHTML=pendingOrders.length?
+    `<table>
+      <tr><th>TK</th><th>MK</th><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Gói</th><th>Ngày gửi</th><th>Thao tác</th></tr>
+      ${pendingOrders.map((o,i)=>`<tr>
+        <td>${esc(o.tk)}</td>
+        <td>${esc(o.mk)}</td>
+        <td>${esc(o.char)}</td>
+        <td>Sever ${esc(o.server)}</td>
+        <td>${esc(o.fb)}</td>
+        <td>${o.months} tháng</td>
+        <td>${fmt(o.submitted||o.start)}</td>
+        <td>
+          <button class="primary" onclick="approvePending(${i})">Duyệt</button>
+          <button class="danger" onclick="rejectPending(${i})">Từ chối</button>
+        </td>
+      </tr>`).join('')}
+    </table>`:'<p class="small">Không có đơn UP chờ duyệt.</p>';
+
+  pendingClanTable.innerHTML=clanRequests.filter(x=>x.status==='Chờ duyệt').length?
+    renderClanPendingAdmin():'<p class="small">Không có đơn Clan chờ duyệt.</p>';
+}
+
+function renderClanPendingAdmin(){
+  let a=clanRequests.filter(x=>x.status==='Chờ duyệt');
+
+  return `<table>
+    <tr><th>Nhân vật</th><th>Facebook</th><th>Clan</th><th>Phái</th><th>Tháng</th><th>Giá</th><th>Thao tác</th></tr>
+    ${a.map(x=>{
+      let i=clanRequests.indexOf(x);
+      return `<tr>
+        <td>${esc(x.char)}</td>
+        <td>${esc(x.fb)}</td>
+        <td>${esc(x.clanName)}</td>
+        <td>${esc(x.factionName)}</td>
+        <td>${x.months}</td>
+        <td>${Number(x.price||0).toLocaleString('vi-VN')}đ</td>
+        <td>
+          <button class="primary" onclick="approveClan(${i})">Duyệt</button>
+          <button class="danger" onclick="rejectClan(${i})">Từ chối</button>
+        </td>
+      </tr>`;
+    }).join('')}
+  </table>`;
+}
+
+function submitUpOrder(){
+  if(current.admin)return alert('Admin không cần gửi đơn UP');
+
+  let o={
+    id:Date.now(),
+    type:'up',
+    owner:current.u,
+    tk:pTk.value.trim(),
+    mk:pMk.value,
+    char:pChar.value.trim(),
+    server:pServer.value,
+    slot:1,
+    tab:'',
+    fb:pFb.value.trim(),
+    months:Number(pPlan.value),
+    start:new Date().toISOString().slice(0,10),
+    submitted:new Date().toISOString(),
+    status:'Chờ duyệt'
+  };
+
+  if(!o.tk||!o.mk||!o.char)return alert('Vui lòng nhập đủ TK, MK và tên nhân vật');
+
+  pendingOrders.push(o);
+  localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));
+  cloudSyncKey('pendingOrders',pendingOrders);
+
+  pTk.value='';
+  pMk.value='';
+  pChar.value='';
+  pFb.value='';
+
+  renderPersonal();
+  alert('Đã gửi đơn UP, đang chờ Admin duyệt');
+}
+
+function approvePending(i){
+  let p=pendingOrders[i];
+
+  let o={
+    tk:p.tk,
+    mk:p.mk,
+    char:p.char,
+    server:p.server,
+    fb:p.fb,
+    slot:p.slot||1,
+    tab:p.tab||'',
+    start:p.start||new Date().toISOString().slice(0,10),
+    months:p.months,
+    owner:p.owner
+  };
+
+  orders.push(o);
+  pendingOrders.splice(i,1);
+
+  localStorage.setItem(KEY+'orders',JSON.stringify(orders));
+  cloudSyncKey('orders',orders);
+
+  localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));
+  cloudSyncKey('pendingOrders',pendingOrders);
+
+  renderPending();
+  render();
+
+  if(current&&!current.admin)renderPersonal();
+
+  alert('Đã duyệt và chuyển tự động sang Quản lý đơn UP');
+}
+
+function rejectPending(i){
+  if(!confirm('Từ chối đơn này?'))return;
+
+  pendingOrders.splice(i,1);
+
+  localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));
+  cloudSyncKey('pendingOrders',pendingOrders);
+
+  renderPending();
+}
+
+function openModal(){
+  if(!current?.admin)return;
+
+  editIndex=-1;
+  modalTitle.textContent='Thêm đơn up';
+
+  fTk.value='';
+  fMk.value='';
+  fChar.value='';
+  fServer.value='1';
+  fSlot.value='1';
+  fTab.value='Tab 1';
+  fFb.value='';
+  fStart.value=new Date().toISOString().slice(0,10);
+  fPlan.value='1';
+
+  modal.classList.remove('hidden');
+}
+
+function closeModal(){
+  modal.classList.add('hidden');
+}
+
+function saveOrder(){
+  let o={
+    tk:fTk.value.trim(),
+    mk:fMk.value,
+    char:fChar.value.trim(),
+    server:fServer.value,
+    slot:Number(fSlot.value)||1,
+    tab:fTab.value.trim(),
+    fb:fFb.value.trim(),
+    start:fStart.value||new Date().toISOString().slice(0,10),
+    months:Number(fPlan.value)||1,
+    owner:editIndex>=0?orders[editIndex].owner:null
+  };
+
+  if(!o.tk||!o.mk||!o.char)return alert('Vui lòng nhập đủ TK, MK và nhân vật');
+
+  if(editIndex>=0){
+    orders[editIndex]={...orders[editIndex],...o};
+  }else{
+    orders.push(o);
+  }
+
+  localStorage.setItem(KEY+'orders',JSON.stringify(orders));
+  cloudSyncKey('orders',orders);
+
+  closeModal();
+  render();
+}
+
+function editOrder(i){
+  editIndex=i;
+  let o=orders[i];
+
+  fTk.value=o.tk||'';
+  fMk.value=o.mk||'';
+  fChar.value=o.char||'';
+  fServer.value=o.server||'1';
+  fSlot.value=o.slot||1;
+  fTab.value=o.tab||'Tab 1';
+  fFb.value=o.fb||'';
+  fStart.value=o.start||new Date().toISOString().slice(0,10);
+  fPlan.value=o.months||1;
+
+  modalTitle.textContent='Sửa đơn up';
+  modal.classList.remove('hidden');
+}
+
+function deleteOrder(i){
+  if(!confirm('Xóa đơn này?'))return;
+
+  orders.splice(i,1);
+  localStorage.setItem(KEY+'orders',JSON.stringify(orders));
+  cloudSyncKey('orders',orders);
+  render();
+}
+
+function renderExpiring(){
+  let a=orders.filter(o=>daysLeft(o)<=7);
+
+  expireTable.innerHTML=a.length?
+    `<table>
+      <tr><th>TK</th><th>Nhân vật</th><th>Sever</th><th>Kết thúc</th><th>Trạng thái</th></tr>
+      ${a.map(o=>{
+        let s=status(o);
+        return `<tr>
+          <td>${current.admin?esc(o.tk):'***'}</td>
+          <td>${esc(o.char)}</td>
+          <td>Sever ${esc(o.server)}</td>
+          <td>${fmt(endDate(o))}</td>
+          <td><span class="badge ${s[1]}">${s[0]}</span></td>
+        </tr>`;
+      }).join('')}
+    </table>`:'<p class="small">Không có đơn sắp hết hạn.</p>';
+}
+
+function togglePass(id,btn){
+  let el=document.getElementById(id);
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'👁️':'🙈';
+}
+
+function clanPrice(months){
+  return Math.max(0,Number(clanConfig.price)||5000)*months;
+}
+
+function saveClan(){
+  localStorage.setItem(KEY+'clanConfig',JSON.stringify(clanConfig));
+  cloudSyncKey('clanConfig',clanConfig);
+}
+
+function renderClan(){
+  if(!current||current.admin)return;
+
+  let cards=Object.entries(clanConfig.clans)
+    .filter(([id,x])=>x.available)
+    .map(([id,x])=>{
+      let chips=defaultClanFactions.map(f=>{
+        let ok=x.factions?.[f.id];
+        return `<span class="badge ${ok?'ok':'expired'}" style="display:inline-block;margin:2px">${esc(f.name)}: ${ok?'Còn':'Full'}</span>`;
+      }).join('');
+
+      return `<div class="clan-card">
+        ${x.img?`<img src="${x.img}" alt="${esc(x.name)}">`:''}
+        <h3>${esc(x.name)}</h3>
+        <div><b>📢 Thông báo</b><br>${esc(x.notice||'Chưa có thông báo.').replace(/\n/g,'<br>')}</div>
+        <div><b>Phái:</b><div style="margin:7px 0 12px">${chips}</div></div>
+        <button class="primary" onclick="chooseClan('${id}')">Chọn Clan</button>
+      </div>`;
+    }).join('');
+
+  clanUserView.innerHTML=cards?
+    '<div class="clan-grid">'+cards+'</div>':
+    '<div class="card">Hiện chưa có Clan đang cho thuê.</div>';
+
+  renderMyClanRequests();
+}
+
+function chooseClan(clanId){
+  let c=clanConfig.clans[clanId];
+
+  let factions=defaultClanFactions.filter(x=>c.factions?.[x.id]);
+  if(!factions.length)return alert('Clan này hiện đã FULL tất cả phái.');
+
+  let char=prompt('Nhập tên nhân vật:','');
+  if(!char)return;
+
+  let fb=prompt('Nhập Facebook:','');
+  if(!fb)return;
+
+  let opts=factions.map((x,i)=>`${i+1}. ${x.name} — Còn chỗ`).join('\n');
+  let n=Number(prompt('Chọn phái bằng số:\n'+opts,'1'));
+
+  if(!Number.isInteger(n)||n<1||n>factions.length)return;
+
+  let f=factions[n-1];
+
+  let m=Number(prompt('Nhập số tháng thuê (1-12):','1'));
+  if(!Number.isInteger(m)||m<1||m>12)return alert('Thời gian phải từ 1 đến 12 tháng');
+
+  let price=clanPrice(m);
+  let start=new Date().toISOString().slice(0,10);
+
+  if(confirm(`${c.name}
+Nhân vật: ${char}
+Phái: ${f.name}
+${m} tháng = ${price.toLocaleString('vi-VN')}đ
+Bắt đầu: ${fmt(start)}
+Kết thúc: ${fmt(clanEndDate({start,months:m}))}
+
+Gửi đơn chờ Admin duyệt?`)){
+    clanRequests.push({
+      id:Date.now(),
+      type:'clan',
+      owner:current.u,
+      char,
+      fb,
+      clanId,
+      clanName:c.name,
+      factionId:f.id,
+      factionName:f.name,
+      months:m,
+      price,
+      start,
+      status:'Chờ duyệt'
+    });
+
+    localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));
+    cloudSyncKey('clanRequests',clanRequests);
+
+    renderMyClanRequests();
+    alert('Đã gửi đơn thuê Clan, đang chờ Admin duyệt');
+  }
+}
+
+function renderMyClanRequests(){
+  let a=clanRequests.filter(x=>x.owner===current.u);
+
+  myClanRequests.innerHTML=a.length?
+    '<table><tr><th>Clan</th><th>Phái</th><th>Thời gian</th><th>Giá</th><th>Trạng thái</th></tr>'+
+    a.map(x=>`<tr>
+      <td>${esc(x.clanName)}</td>
+      <td>${esc(x.factionName||x.clanName)}</td>
+      <td>${x.months} tháng</td>
+      <td>${Number(x.price||0).toLocaleString('vi-VN')}đ</td>
+      <td>${esc(x.status)}</td>
+    </tr>`).join('')+
+    '</table>':
+    '<p class="small">Chưa có yêu cầu thuê Clan.</p>';
+}
+
+function renderClanManage(){
+  if(!current?.admin)return;
+
+  clanAdmin.innerHTML=
+    '<div class="card"><h3>⚙️ Sửa cho thuê Clan</h3>'+
+    '<p class="small">Admin có thể đóng/mở từng Clan, cập nhật ảnh + thông báo và đánh dấu từng phái là <b>Đang còn</b> hoặc <b>Đã full</b>. Người thuê sẽ thấy đúng thông tin này.</p>'+
+    '<label>Giá mỗi tháng <input id="clanPriceInput" type="number" value="'+clanConfig.price+'"> đ/tháng</label>'+
+    '<p class="small">Giá mặc định 5.000đ/tháng, tự nhân theo số tháng đến 12 tháng.</p>'+
+    '<div class="clan-grid">'+
+    Object.entries(clanConfig.clans).map(([id,x])=>`
+      <div class="clan-card">
+        <h3>${esc(x.name)}</h3>
+        <label>📢 Thông báo cho người thuê<textarea id="notice_${id}" rows="4" style="width:100%" placeholder="Ví dụ: Clan đang tuyển Xạ thủ, bảo trì lúc 22h...">${esc(x.notice||'')}</textarea></label>
+        <p><b>🖼️ Ảnh Clan</b></p>
+        <input type="file" accept="image/*" onchange="loadClanGroupImage(this,'${id}')">
+        ${x.img?`<img src="${x.img}" alt="Ảnh ${esc(x.name)}"><br><button type="button" onclick="removeClanGroupImage('${id}')">Xóa ảnh</button>`:'<p class="small">Chưa có ảnh. Chọn ảnh để người thuê nhìn thấy.</p>'}
+        <br>
+        <label><input type="checkbox" ${x.available?'checked':''} onchange="clanConfig.clans['${id}'].available=this.checked;saveClan();renderClanManage()"> 🟢 Cho phép thuê Clan này</label>
+        <hr>
+        <b>Trạng thái từng phái</b>
+        <div style="margin-top:8px">
+        ${defaultClanFactions.map(f=>`<label style="display:block;margin:7px 0"><input type="checkbox" ${x.factions?.[f.id]?'checked':''} onchange="setClanFaction('${id}','${f.id}',this.checked)"> ${esc(f.name)} — <b>${x.factions?.[f.id]?'Còn chỗ':'Đã full'}</b></label>`).join('')}
+        </div>
+      </div>`).join('')+
+    '</div><br><button class="primary" onclick="saveClanConfig()">💾 Lưu cấu hình Clan</button></div>';
+
+  clanManageRequests.innerHTML=renderClanAdminRequests();
+}
+
+function setClanFaction(clanId,factionId,available){
+  clanConfig.clans[clanId].factions[factionId]=available;
+  saveClan();
+  renderClanManage();
+}
+
+function renderClanAdminRequests(){
+  let a=clanRequests;
+
+  return a.length?
+    '<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+
+    a.map(x=>`<tr>
+      <td>${esc(x.char||'')}</td>
+      <td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td>
+      <td>${esc(x.clanName)}</td>
+      <td>${fmt(x.start)}</td>
+      <td>${fmt(clanEndDate(x))}</td>
+      <td>${esc(x.status)}</td>
+    </tr>`).join('')+
+    '</table>':
+    '<p>Chưa có đơn.</p>';
+}
+
+function renderClanOrdersTable(){
+  let a=clanRequests;
+
+  clanOrdersTable.innerHTML=a.length?
+    '<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+
+    a.map(x=>`<tr>
+      <td>${esc(x.char||'')}</td>
+      <td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td>
+      <td>${esc(x.clanName)}</td>
+      <td>${fmt(x.start)}</td>
+      <td>${fmt(clanEndDate(x))}</td>
+      <td>${esc(x.status)}</td>
+    </tr>`).join('')+
+    '</table>':
+    '<div class="small">Chưa có đơn thuê Clan.</div>';
+}
+
+function saveClanConfig(){
+  clanConfig.price=Math.max(0,Number(clanPriceInput.value)||5000);
+
+  Object.keys(clanConfig.clans).forEach(id=>{
+    let el=document.getElementById('notice_'+id);
+    if(el)clanConfig.clans[id].notice=el.value.trim();
+  });
+
+  saveClan();
+  renderClanManage();
+  alert('Đã lưu cấu hình Clan');
+}
+
+function loadClanGroupImage(input,id){
+  let f=input.files[0];
+  if(!f)return;
+
+  if(f.size>3*1024*1024)return alert('Ảnh quá lớn. Vui lòng chọn ảnh dưới 3MB.');
+
+  let r=new FileReader();
+
+  r.onload=()=>{
+    clanConfig.clans[id].img=r.result;
+    saveClan();
+    renderClanManage();
+    alert('Đã cập nhật ảnh '+clanConfig.clans[id].name+'. Người thuê sẽ thấy ảnh này.');
+  };
+
+  r.readAsDataURL(f);
+}
+
+function removeClanGroupImage(id){
+  clanConfig.clans[id].img='';
+  saveClan();
+  renderClanManage();
+}
+
+function approveClan(i){
+  clanRequests[i].status='Đã duyệt';
+
+  localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));
+  cloudSyncKey('clanRequests',clanRequests);
+
+  renderPending();
+  renderClanManage();
+}
+
+function rejectClan(i){
+  clanRequests[i].status='Từ chối';
+
+  localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));
+  cloudSyncKey('clanRequests',clanRequests);
+
+  renderPending();
+  renderClanManage();
+}
+
+function renderNotice(){
+  noticeContent.innerHTML=settings.notice?
+    `<div class="notice"><h3>📢 Thông báo từ HTTH UP THUÊ QUỐC HUY</h3><div>${esc(settings.notice).replace(/\n/g,'<br>')}</div></div>`:
+    '<div class="card">Chưa có thông báo.</div>';
+
+  if(current)noticeAdmin.classList.toggle('hidden',!current.admin);
+}
+
+function saveNotice(){
+  settings.notice=noticeText.value.trim();
+  saveSettings();
+  renderNotice();
+  alert('Đã lưu thông báo');
+}
+
+function clearNotice(){
+  settings.notice='';
+  saveSettings();
+  renderNotice();
+}
+
+function renderPayment(){
+  paymentContent.innerHTML=
+    `<h3>Thông tin chuyển khoản</h3>
+    ${settings.bank?`<p><b>Ngân hàng / ví:</b> ${esc(settings.bank)}</p>`:''}
+    ${settings.number?`<p><b>Số tài khoản / SĐT:</b> ${esc(settings.number)}</p>`:''}
+    ${settings.owner?`<p><b>Chủ tài khoản:</b> ${esc(settings.owner)}</p>`:''}
+    ${settings.content?`<p><b>Nội dung:</b> ${esc(settings.content)}</p>`:''}
+    ${settings.qr?`<img src="${settings.qr}" class="preview-qr">`:''}
+    ${!settings.bank&&!settings.number&&!settings.qr?'<p>Chưa cài đặt thông tin chuyển khoản.</p>':''}`;
+
+  if(current&&current.admin){
+    bankName.value=settings.bank||'';
+    bankNumber.value=settings.number||'';
+    bankOwner.value=settings.owner||'';
+    bankContent.value=settings.content||'';
+
+    if(settings.qr){
+      qrPreview.src=settings.qr;
+      qrPreview.classList.remove('hidden');
+    }
+  }
+}
+
+function loadQr(input){
+  let f=input.files[0];
+  if(!f)return;
+
+  let r=new FileReader();
+
+  r.onload=()=>{
+    settings.qr=r.result;
+    qrPreview.src=r.result;
+    qrPreview.classList.remove('hidden');
+  };
+
+  r.readAsDataURL(f);
+}
+
+function savePayment(){
+  settings.bank=bankName.value.trim();
+  settings.number=bankNumber.value.trim();
+  settings.owner=bankOwner.value.trim();
+  settings.content=bankContent.value.trim();
+
+  saveSettings();
+  renderPayment();
+  alert('Đã lưu thông tin chuyển khoản');
+}
+
+function saveSettings(){
+  localStorage.setItem(KEY+'settings',JSON.stringify(settings));
+  cloudSyncKey('settings',settings);
+}
+
+function renderAccounts(){
+  accountTable.innerHTML=
+    '<table><tr><th>Tên đăng nhập</th><th>Vai trò</th><th>Thao tác</th></tr>'+
+    accounts.map((a,i)=>`<tr>
+      <td>${esc(a.u)}</td>
+      <td>${a.admin?'Admin':'Nhân viên'}</td>
+      <td>
+        <button onclick="resetAccountPass(${i})">Đổi MK</button>
+        ${a.u!=='admin'?` <button class="danger" onclick="deleteAccount(${i})">Xóa</button>`:''}
+      </td>
+    </tr>`).join('')+
+    '</table>';
+}
+
+function addAccount(){
+  let u=newUser.value.trim(),p=newPass.value,r=newRole.value;
+
+  if(!u||!p)return alert('Nhập đủ tên đăng nhập và mật khẩu');
+  if(accounts.some(a=>a.u===u))return alert('Tên đăng nhập đã tồn tại');
+
+  accounts.push({
+    u,
+    p,
+    admin:r==='admin'
+  });
+
+  saveAccounts();
+
+  newUser.value='';
+  newPass.value='';
+
+  renderAccounts();
+}
+
+function saveAccounts(){
+  localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));
+  cloudSyncKey('accounts',accounts);
+}
+
+function deleteAccount(i){
+  if(confirm('Xóa tài khoản '+accounts[i].u+'?')){
+    accounts.splice(i,1);
+    saveAccounts();
+    renderAccounts();
+  }
+}
+
+function resetAccountPass(i){
+  let p=prompt('Nhập mật khẩu mới cho '+accounts[i].u);
+
+  if(p){
+    accounts[i].p=p;
+    saveAccounts();
+    alert('Đã đổi mật khẩu');
+  }
+}
+
+function changeMyPassword(){
+  if(oldPass.value!==current.p)return alert('Mật khẩu hiện tại không đúng');
+  if(!changePass.value)return alert('Nhập mật khẩu mới');
+
+  let i=accounts.findIndex(a=>a.u===current.u);
+
+  accounts[i].p=changePass.value;
+  current.p=changePass.value;
+
+  saveAccounts();
+
+  oldPass.value='';
+  changePass.value='';
+
+  alert('Đổi mật khẩu thành công');
+}
+
+function saveFb(){
+  settings.fb=fbUrl.value.trim();
+  saveSettings();
+  globalFb.classList.toggle('hidden',!settings.fb);
+  alert('Đã lưu Facebook');
+}
+
+function openMyFacebook(){
+  if(settings.fb)window.open(settings.fb,'_blank');
+}
+
+function setTheme(t){
+  settings.theme=t;
+  saveSettings();
+  applyTheme();
+}
+
+function applyTheme(){
+  document.body.classList.toggle('dark',settings.theme==='dark');
+}
+
+bootstrapCloud();
+
 </script></body></html>
