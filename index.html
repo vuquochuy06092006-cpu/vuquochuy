@@ -23,6 +23,7 @@ main{max-width:1400px;margin:20px auto;padding:0 16px}.cards{display:grid;grid-t
 <section id="expiring" class="hidden"><h2>🔔 Sắp hết hạn</h2><div id="expireTable"></div></section>
 <section id="notice" class="hidden"><h2>📢 Thông báo</h2><div id="noticeContent"></div><div id="noticeAdmin" class="hidden"><h3>Đăng / sửa thông báo</h3><textarea id="noticeText" rows="5" style="width:100%" placeholder="Nội dung thông báo..."></textarea><br><button class="primary" onclick="saveNotice()">Lưu thông báo</button><button onclick="clearNotice()">Xóa thông báo</button></div></section>
 <section id="transfer" class="hidden"><h2>💳 Chuyển khoản</h2><div class="card"><div id="paymentContent"></div><div id="paymentAdmin" class="hidden"><h3>Cài đặt thông tin chuyển khoản</h3><div class="grid"><label>Ngân hàng / ví<input id="bankName"></label><label>Số tài khoản / số điện thoại<input id="bankNumber"></label><label>Chủ tài khoản<input id="bankOwner"></label><label>Nội dung chuyển khoản<input id="bankContent"></label></div><p>Ảnh mã QR:</p><input type="file" id="qrFile" accept="image/*" onchange="loadQr(this)"><img id="qrPreview" class="preview-qr hidden"><br><button class="primary" onclick="savePayment()">Lưu thông tin</button></div></div></section>
+
 <section id="accounts" class="hidden"><h2>👥 Tài khoản truy cập</h2><p class="small">Admin quản lý tài khoản. Nhân viên chỉ xem đơn, không thấy TK/MK.</p><div id="accountTable"></div><div class="card"><h3>Thêm tài khoản</h3><div class="grid"><label>Tên đăng nhập<input id="newUser"></label><label>Mật khẩu<input id="newPass" type="password"></label><label>Vai trò<select id="newRole"><option value="user">Nhân viên</option><option value="admin">Admin</option></select></label></div><br><button class="primary" onclick="addAccount()">Thêm tài khoản</button></div></section>
 <section id="settings" class="hidden"><h2>⚙️ Giao diện & liên hệ</h2><div class="settings-grid"><div class="card"><h3>Giao diện</h3><button onclick="setTheme('light')">☀️ Sáng</button> <button onclick="setTheme('dark')">🌙 Tối</button></div><div class="card"><h3>Facebook của bạn</h3><input id="fbUrl" style="width:100%" placeholder="https://facebook.com/..."> <br><br><button class="primary" onclick="saveFb()">Lưu link Facebook</button><p class="small">Nút Facebook sẽ xuất hiện để mọi người bấm và chuyển thẳng tới trang của bạn.</p></div></div><div class="card" style="margin-top:14px"><h3>Đổi mật khẩu tài khoản đang đăng nhập</h3><div class="passwrap"><input id="oldPass" type="password" placeholder="Mật khẩu hiện tại"><button class="eye" type="button" onclick="togglePass('oldPass',this)">👁️</button></div><div class="passwrap"><input id="changePass" type="password" placeholder="Mật khẩu mới"><button class="eye" type="button" onclick="togglePass('changePass',this)">👁️</button></div><button class="primary" onclick="changeMyPassword()">Đổi mật khẩu</button></div></section>
 </main></div>
@@ -73,33 +74,35 @@ let cloudReady=false;
 function cloudKey(name){return KEY+name}
 
 async function cloudLoadAll(){
-  if(!CLOUD_ENABLED)return;
+  if(!CLOUD_ENABLED)return false;
   try{
     const {data,error}=await supabaseClient.from('app_store').select('key,value');
     if(error)throw error;
-    if(Array.isArray(data)){
-      for(const row of data){
-        if(CLOUD_KEYS.includes(row.key)){
-          localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
-        }
-      }
-      // Reload the in-memory values from the shared database.
-      orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
-      accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
-      settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
-      pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
-      clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig'))||'null')||clanConfig;
-      clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
+    if(!Array.isArray(data))return false;
+    // Chỉ nạp dữ liệu cloud khi thực sự có dữ liệu. Không được ghi đè
+    // dữ liệu local bằng mảng rỗng nếu cloud đang trống/lỗi.
+    const rows=data.filter(row=>CLOUD_KEYS.includes(row.key));
+    if(rows.length===0){cloudReady=true;return false;}
+    for(const row of rows){
+      localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
     }
+    orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
+    accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
+    settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
+    pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
+    clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig')||'null')||'null')||clanConfig;
+    clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
     cloudReady=true;
+    return true;
   }catch(e){
     console.error('Cloud load error:',e);
     cloudReady=false;
+    return false;
   }
 }
 
 async function cloudSave(name,value){
-  if(!CLOUD_ENABLED || !cloudReady)return;
+  if(!CLOUD_ENABLED || !cloudReady)return false;
   try{
     const {error}=await supabaseClient.from('app_store').upsert({
       key:name,
@@ -107,7 +110,8 @@ async function cloudSave(name,value){
       updated_at:new Date().toISOString()
     },{onConflict:'key'});
     if(error)throw error;
-  }catch(e){console.error('Cloud save error for '+name+':',e);}
+    return true;
+  }catch(e){console.error('Cloud save error for '+name+':',e);return false;}
 }
 
 function cloudSyncKey(name,value){
@@ -131,7 +135,8 @@ async function pushAllToCloud(){
 
 async function refreshCloudAndRender(){
   if(!CLOUD_ENABLED)return;
-  await cloudLoadAll();
+  const loaded=await cloudLoadAll();
+  if(!loaded)return;
   applyTheme();
   renderNotice();
   renderPayment();
@@ -141,17 +146,44 @@ async function refreshCloudAndRender(){
     render();
   }
 }
+
 async function bootstrapCloud(){
+  // Luôn cho phép web chạy local nếu Supabase không truy cập được.
   if(!CLOUD_ENABLED){
     console.warn('Supabase chưa được cấu hình. Website đang chạy ở chế độ local.');
+    applyTheme(); renderNotice(); renderPayment(); restoreLogin();
     return;
   }
-  await cloudLoadAll();
-  // Migrate an existing local copy only when the cloud is empty.
-  const {data}=await supabaseClient.from('app_store').select('key').limit(1);
-  if(!data || data.length===0){
-    await pushAllToCloud();
+
+  // QUAN TRỌNG: kiểm tra cloud TRƯỚC khi ghi cloud vào localStorage.
+  // Bản cũ load [] từ cloud trước rồi mới kiểm tra cloud rỗng, làm mất đơn local.
+  try{
+    const {data,error}=await supabaseClient.from('app_store').select('key,value');
+    if(error)throw error;
+    const rows=Array.isArray(data)?data.filter(row=>CLOUD_KEYS.includes(row.key)):[];
+    
+    if(rows.length>0){
+      for(const row of rows){
+        localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
+      }
+      orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
+      accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
+      settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||settings;
+      pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
+      clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig')||'null')||'null')||clanConfig;
+      clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests')||'[]'));
+      cloudReady=true;
+    }else{
+      // Cloud hoàn toàn trống: giữ nguyên dữ liệu local hiện có và đưa lên cloud.
+      cloudReady=true;
+      await pushAllToCloud();
+    }
+  }catch(e){
+    console.error('Cloud bootstrap error:',e);
+    // Không chặn trang đăng nhập khi cloud lỗi/mất mạng.
+    cloudReady=false;
   }
+
   applyTheme();
   renderNotice();
   renderPayment();
