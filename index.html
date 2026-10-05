@@ -4,264 +4,214 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HTTH UP THUÊ QUỐC HUY</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh}.side{width:240px;background:#0f172a;color:#fff;padding:18px 12px;position:fixed;left:0;top:0;bottom:0;overflow:auto}.brand{font-size:20px;font-weight:800;text-align:center;padding:10px 4px 20px}.nav button{width:100%;border:0;background:transparent;color:#cbd5e1;padding:12px;border-radius:9px;text-align:left;margin:2px 0}.nav button:hover,.nav button.active{background:#1e293b;color:#fff}.main{margin-left:240px;width:calc(100% - 240px);padding:20px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}.title{font-size:24px;font-weight:800}.userbox{font-size:13px;color:#64748b}.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 3px 16px #0000000c;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:16px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}.stat b{font-size:24px;display:block;margin-top:6px}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#2563eb}.full{grid-column:1/-1}.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700}.primary{background:#2563eb;color:#fff}.success{background:#16a34a;color:#fff}.danger{background:#dc2626;color:#fff}.gray{background:#e2e8f0}.small{font-size:12px;color:#64748b}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:middle}th{background:#f8fafc;white-space:nowrap}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.pending-badge{background:#dbeafe;color:#1d4ed8}.hidden{display:none!important}.notice{padding:10px 12px;border-radius:8px;background:#eff6ff;color:#1e40af;margin-bottom:12px}.dangerbox{padding:10px 12px;border-radius:8px;background:#fef2f2;color:#991b1b;margin-bottom:12px}.passwrap{display:flex;gap:5px;align-items:center}.passwrap input{min-width:110px}.eye{border:0;background:#e2e8f0;border-radius:6px;padding:7px}.fb-link{color:#2563eb;text-decoration:none}.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}.modalbox{background:#fff;width:min(560px,100%);border-radius:14px;padding:18px}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.close{border:0;background:#e2e8f0;border-radius:7px;padding:6px 10px}.toast{position:fixed;right:20px;bottom:20px;background:#0f172a;color:#fff;padding:12px 16px;border-radius:10px;display:none;z-index:50}.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#dbeafe,#f8fafc)}.loginbox{width:min(400px,92%);background:#fff;padding:24px;border-radius:16px;box-shadow:0 8px 30px #0001}.loginbox h1{text-align:center;margin-top:0}.loginbox .field{margin-bottom:12px}@media(max-width:900px){.side{width:200px}.main{margin-left:200px;width:calc(100% - 200px)}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.side{position:static;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%;padding:12px}.grid,.formgrid{grid-template-columns:1fr}.nav{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}.nav button{margin:0}.top{align-items:flex-start;flex-direction:column}}
-</style>
-</head>
-<body>
-<div id="loginView" class="login">
-<div class="loginbox">
-<h1>HTTH UP THUÊ QUỐC HUY</h1>
-<div class="small" style="text-align:center;margin-bottom:18px">Đăng nhập hệ thống</div>
-<div class="field"><label>Tài khoản</label><input id="loginU"></div>
-<div class="field"><label>Mật khẩu</label><input id="loginP" type="password"></div>
-<button class="btn primary" style="width:100%" onclick="login()">Đăng nhập</button>
-</div>
-</div>
-
-<div id="appView" class="app hidden">
-<aside class="side">
-<div class="brand">HTTH UP THUÊ<br>QUỐC HUY</div>
-<div class="nav">
-<button onclick="showPage('dashboard')" id="nav-dashboard">📊 Tổng quan</button>
-<button onclick="showPage('pending')" id="nav-pending">⏳ Chờ duyệt</button>
-<button onclick="showPage('orders')" id="nav-orders">📦 Quản lý đơn</button>
-<button onclick="showPage('personal')" id="nav-personal">👤 Cá nhân</button>
-<button onclick="showPage('clan')" id="nav-clan">🏠 Cho thuê Clan</button>
-<button onclick="showPage('editClan')" id="nav-editClan">✏️ Sửa cho thuê Clan</button>
-<button onclick="showPage('expiring')" id="nav-expiring">⚠️ Sắp hết hạn</button>
-<button onclick="showPage('notify')" id="nav-notify">🔔 Thông báo</button>
-<button onclick="showPage('transfer')" id="nav-transfer">💸 Chuyển khoản</button>
-<button onclick="showPage('account')" id="nav-account">🔐 Tài khoản</button>
-<button onclick="showPage('theme')" id="nav-theme">🎨 Giao diện</button>
-<button onclick="logout()">🚪 Đăng xuất</button>
-</div>
-</aside>
-
-<main class="main">
-<div class="top">
-<div>
-<div class="title" id="pageTitle">Tổng quan</div>
-<div class="userbox" id="userBox"></div>
-</div>
-</div>
-
-<section id="page-dashboard" class="page">
-<div class="grid">
-<div class="stat">Đơn đang UP<b id="stOrders">0</b></div>
-<div class="stat">Chờ duyệt<b id="stPending">0</b></div>
-<div class="stat">Sắp hết hạn<b id="stExpiring">0</b></div>
-<div class="stat">Clan đang cho thuê<b id="stClan">0</b></div>
-</div>
-<div class="card" style="margin-top:16px">
-<h3>📌 Hệ thống</h3>
-<div class="small">Quản lý tài khoản UP thuê, đơn hàng và Clan.</div>
-</div>
-</section>
-
-<section id="page-pending" class="page hidden">
-<div class="card">
-<h3>⏳ Đơn chờ duyệt</h3>
-<div class="tablewrap" id="pendingTable"></div>
-</div>
-</section>
-
-<section id="page-orders" class="page hidden">
-<div class="card">
-<h3>📦 Quản lý đơn UP</h3>
-<div class="tablewrap" id="ordersTable"></div>
-</div>
-</section>
-
-<section id="page-personal" class="page hidden">
-<div class="card">
-<h3>👤 Thông tin cá nhân</h3>
-<div class="notice">Tài khoản: <b id="myUsername"></b></div>
-<h3>Gửi đơn UP</h3>
-<div class="formgrid">
-<div class="field"><label>TK game</label><input id="pTk"></div>
-<div class="field"><label>MK game</label><input id="pMk" type="password"></div>
-<div class="field"><label>Tên nhân vật</label><input id="pChar"></div>
-<div class="field"><label>Sever</label><select id="pServer"><option value="1">Sever 1</option><option value="2">Sever 2</option><option value="3">Sever 3</option></select></div>
-<div class="field"><label>Facebook</label><input id="pFb"></div>
-<div class="field"><label>Gói UP</label><select id="pPlan"><option value="1">1 tháng</option><option value="2">2 tháng</option><option value="3">3 tháng</option><option value="6">6 tháng</option><option value="12">12 tháng</option></select></div>
-</div>
-<button class="btn primary" style="margin-top:12px" onclick="submitUpOrder()">📤 Gửi đơn UP</button>
-</div>
-
-<div class="card">
-<h3>📦 Đơn UP của tôi</h3>
-<div class="tablewrap" id="myUpOrders"></div>
-</div>
-</section>
-
-<section id="page-clan" class="page hidden">
-<div class="card">
-<h3>🏠 Cho thuê Clan</h3>
-<div class="formgrid">
-<div class="field"><label>Tên Clan</label><input id="cName"></div>
-<div class="field"><label>Sever</label><input id="cServer"></div>
-<div class="field"><label>Giá thuê</label><input id="cPrice" type="number"></div>
-<div class="field"><label>Người liên hệ</label><input id="cContact"></div>
-<div class="field full"><label>Mô tả</label><textarea id="cDesc"></textarea></div>
-</div>
-<button class="btn primary" style="margin-top:12px" onclick="addClan()">➕ Thêm Clan</button>
-</div>
-<div class="card">
-<div class="tablewrap" id="clanTable"></div>
-</div>
-</section>
-
-<section id="page-editClan" class="page hidden">
-<div class="card">
-<h3>✏️ Sửa cho thuê Clan</h3>
-<div class="tablewrap" id="editClanTable"></div>
-</div>
-</section>
-
-<section id="page-expiring" class="page hidden">
-<div class="card">
-<h3>⚠️ Sắp hết hạn</h3>
-<div class="tablewrap" id="expiringTable"></div>
-</div>
-</section>
-
-<section id="page-notify" class="page hidden">
-<div class="card">
-<h3>🔔 Thông báo</h3>
-<div id="notifyList"></div>
-</div>
-</section>
-
-<section id="page-transfer" class="page hidden">
-<div class="card">
-<h3>💸 Chuyển khoản</h3>
-<div class="notice">Vui lòng chuyển khoản theo thông tin bên dưới và gửi ảnh giao dịch cho Admin.</div>
-<p><b>Ngân hàng:</b> MB Bank</p>
-<p><b>Số tài khoản:</b> 0123456789</p>
-<p><b>Chủ tài khoản:</b> QUỐC HUY</p>
-<p><b>Nội dung:</b> HTTH + TÊN TÀI KHOẢN</p>
-</div>
-</section>
-
-<section id="page-account" class="page hidden">
-<div class="card">
-<h3>🔐 Tài khoản</h3>
-<div class="formgrid">
-<div class="field"><label>Mật khẩu mới</label><input id="newPass" type="password"></div>
-<div class="field"><label>Nhập lại mật khẩu</label><input id="newPass2" type="password"></div>
-</div>
-<button class="btn primary" style="margin-top:12px" onclick="changePass()">Đổi mật khẩu</button>
-</div>
-</section>
-
-<section id="page-theme" class="page hidden">
-<div class="card">
-<h3>🎨 Giao diện</h3>
-<div class="formgrid">
-<div class="field"><label>Màu nền</label><input id="themeBg" type="color" value="#f4f7fb"></div>
-<div class="field"><label>Màu chữ</label><input id="themeText" type="color" value="#172033"></div>
-</div>
-<button class="btn primary" style="margin-top:12px" onclick="applyTheme()">Lưu giao diện</button>
-</div>
-</section>
-</main>
-</div>
-
-<div id="toast" class="toast"></div>
+*{box-sizing:border-box} :root{--bg:#f3f5f9;--card:#fff;--text:#172033;--primary:#2563eb;--nav:#fff;--line:#e5e7eb} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--nav:#111827;--line:#334155} body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:#fff;border-color:#475569} body.dark th{background:#243247}
+header{background:#111827;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:20px;font-weight:700}.user{font-size:13px;opacity:.9}nav{background:var(--nav);padding:10px 18px;border-bottom:1px solid var(--line);display:flex;gap:7px;flex-wrap:wrap}button{border:0;border-radius:8px;padding:9px 13px;cursor:pointer}nav button{background:#eef2ff}.danger{background:#fee2e2!important;color:#991b1b}.primary{background:var(--primary);color:#fff}.secondary{background:#e5e7eb;color:#111827}
+main{max-width:1400px;margin:20px auto;padding:0 16px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:var(--card);border-radius:12px;padding:17px;box-shadow:0 2px 8px #0000000b}.num{font-size:25px;font-weight:700;margin-top:7px}table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;margin-top:18px}th,td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#f8fafc}.badge{padding:5px 8px;border-radius:99px;font-size:12px;font-weight:600}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.expired{background:#fee2e2;color:#991b1b}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.toolbar input,.toolbar select,input,select,textarea{padding:9px;border:1px solid #d1d5db;border-radius:8px}.login{min-height:100vh;display:grid;place-items:center;background:#111827}.loginbox{background:#fff;padding:28px;border-radius:16px;width:min(400px,92%)}.loginbox input{width:100%;margin:7px 0}.loginbox button{width:100%;margin-top:8px}.hidden{display:none!important}.modal{position:fixed;inset:0;background:#0008;display:grid;place-items:center;z-index:10}.modalbox{background:var(--card);width:min(700px,94%);padding:22px;border-radius:14px;max-height:90vh;overflow:auto}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid label{font-size:12px}.grid input,.grid select,.grid textarea{width:100%;margin-top:4px}.settings-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.preview-qr{max-width:260px;max-height:260px;border-radius:10px;border:1px solid var(--line);display:block;margin:10px 0}.notice{padding:14px;background:#eff6ff;border-radius:10px;margin:10px 0}.notice h3{margin:0 0 5px}.small{font-size:12px;color:#64748b}.fb-link{color:#2563eb;text-decoration:none;font-weight:600}.top-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.brand small{display:block;font-size:10px;font-weight:400;opacity:.7;margin-top:2px}
+@media(max-width:900px){.cards{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}.grid{grid-template-columns:1fr}.brand{font-size:16px}}
+.eye{background:transparent!important;padding:2px 6px;font-size:16px}.passwrap{display:flex;align-items:center;gap:4px}.passwrap input{flex:1}.pending-badge{background:#dbeafe;color:#1d4ed8}.clan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.clan-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}.clan-card img{width:100%;height:150px;object-fit:cover;border-radius:8px}.muted{opacity:.65}@media(max-width:900px){.clan-grid{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<div id="login" class="login"><div class="loginbox"><h2>⚓ HTTH UP THUÊ QUỐC HUY</h2><p>Đăng nhập hệ thống quản lý</p><input id="loginUser" placeholder="Tên đăng nhập"><input id="loginPass" type="password" placeholder="Mật khẩu"><button class="primary" onclick="doLogin()">Đăng nhập</button><button onclick="openRegister()">📝 Tạo tài khoản</button><button onclick="recoverAccounts()">🔑 Khôi phục TK/MK</button><small id="loginMsg" style="display:block;color:#dc2626;margin-top:8px"></small><p class="small" id="cloudStatus">☁️ Dữ liệu dùng chung giữa các thiết bị sau khi cấu hình Supabase.</p><p class="small">Quên mật khẩu? Nhập tên tài khoản rồi bấm <b>Khôi phục TK/MK</b>. Hệ thống chỉ xử lý đúng tài khoản đó.</p></div></div>
+<div id="app" class="hidden"><header><div class="brand">⚓ HTTH UP THUÊ QUỐC HUY<small>QUẢN LÝ UP THUÊ</small></div><div class="top-actions"><span id="role"></span><button id="globalFb" class="primary hidden" onclick="openMyFacebook()">📘 Facebook</button><button onclick="logout()">Đăng xuất</button></div></header>
+<nav><button onclick="showPage('dashboard')">Tổng quan</button><button id="pendingNav" onclick="showPage('pending')">🕐 Chờ duyệt</button><button id="ordersNav" onclick="showPage('orders')">📦 Quản lý đơn</button><button id="personalNav" onclick="showPage('personal')">👤 Cá nhân</button><button id="clanNav" onclick="showPage('clan')">🏴 Cho thuê Clan</button><button id="clanManageNav" class="hidden" onclick="showPage('clanManage')">⚙️ Sửa cho thuê Clan</button><button onclick="showPage('expiring')">Sắp hết hạn</button><button onclick="showPage('notice')">📢 Thông báo</button><button onclick="showPage('transfer')">💳 Chuyển khoản</button><button id="adminNav" onclick="showPage('accounts')">👥 Tài khoản</button><button id="settingsNav" onclick="showPage('settings')">⚙️ Giao diện</button></nav>
+<main>
+<section id="pending" class="hidden"><h2>🕐 Đơn chờ duyệt</h2><p class="small">Tất cả đơn UP và đơn thuê Clan đều tập trung tại đây. Chỉ Admin được xem thông tin cần thiết để xử lý đơn.</p><div class="card"><h3>📦 Đơn UP</h3><div id="pendingTable"></div></div><div class="card"><h3>🏴 Đơn thuê Clan</h3><div id="pendingClanTable"></div></div></section>
+<section id="personal" class="hidden"><h2>👤 Tài khoản cá nhân</h2><div class="card"><h3>📦 Treo thuê</h3><div class="grid"><label>TK game<input id="pTk"></label><label>MK game<div class="passwrap"><input id="pMk" type="password"><button class="eye" type="button" onclick="togglePass('pMk',this)">👁️</button></div></label><label>Tên nhân vật<input id="pChar"></label><label>Sever<select id="pServer"><option value="1">Sever 1</option><option value="2">Sever 2</option><option value="3">Sever 3</option><option value="4">Sever 4</option></select></label><label>Facebook<input id="pFb"></label><label>Gói UP<select id="pPlan"></select></label></div><br><button class="primary" onclick="submitUpOrder()">Gửi đơn UP</button><div id="myUpOrders" style="margin-top:16px"></div></div><div class="card"><h3>🔑 Tài khoản đăng nhập</h3><p>TK đăng nhập: <b id="myUsername"></b></p><p class="small">Bạn chỉ xem được dữ liệu của chính mình.</p></div></section>
+<section id="clan" class="hidden"><h2>🏴 CHO THUÊ CLAN</h2><div id="clanUserView"></div><div class="card" id="clanRequestsWrap"><h3>📋 Đơn thuê Clan của tôi</h3><div id="myClanRequests"></div></div></section><section id="clanManage" class="hidden"><h2>🏴 Quản lý thuê Clan</h2><div id="clanAdmin"></div><div class="card"><h3>📋 Đơn thuê Clan</h3><div id="clanManageRequests"></div></div></section>
+<section id="dashboard"><h2>Tổng quan</h2><div class="cards"><div class="card">Tổng đơn<div class="num" id="total"></div></div><div class="card">Đang up<div class="num" id="active"></div></div><div class="card">Sắp hết hạn<div class="num" id="soon"></div></div><div class="card">Đã hết hạn<div class="num" id="expired"></div></div></div><div id="dashboardNotice"></div><div id="adminPendingNotice"></div></section>
+<section id="orders" class="hidden"><h2>Quản lý đơn</h2><div class="toolbar"><button class="primary" onclick="showOrderTab('up')">📦 Quản lý đơn UP</button><button onclick="showOrderTab('clan')">🏴 Quản lý đơn thuê Clan</button></div><div id="orderUpPanel"><h3>📦 Quản lý đơn UP</h3><div class="toolbar"><input id="search" placeholder="Tìm TK / nhân vật / Facebook..." oninput="render()"><button class="primary" id="addBtn" onclick="openModal()">+ Thêm đơn</button></div><div id="table"></div></div><div id="orderClanPanel" class="hidden"><h3>🏴 Quản lý đơn thuê Clan</h3><div id="clanOrdersTable"></div></div></section>
+<section id="expiring" class="hidden"><h2>🔔 Sắp hết hạn</h2><div id="expireTable"></div></section>
+<section id="notice" class="hidden"><h2>📢 Thông báo</h2><div id="noticeContent"></div><div id="noticeAdmin" class="hidden"><h3>Đăng / sửa thông báo</h3><textarea id="noticeText" rows="5" style="width:100%" placeholder="Nội dung thông báo..."></textarea><br><button class="primary" onclick="saveNotice()">Lưu thông báo</button><button onclick="clearNotice()">Xóa thông báo</button></div></section>
+<section id="transfer" class="hidden"><h2>💳 Chuyển khoản</h2><div class="card"><div id="paymentContent"></div><div id="paymentAdmin" class="hidden"><h3>Cài đặt thông tin chuyển khoản</h3><div class="grid"><label>Ngân hàng / ví<input id="bankName"></label><label>Số tài khoản / số điện thoại<input id="bankNumber"></label><label>Chủ tài khoản<input id="bankOwner"></label><label>Nội dung chuyển khoản<input id="bankContent"></label></div><p>Ảnh mã QR:</p><input type="file" id="qrFile" accept="image/*" onchange="loadQr(this)"><img id="qrPreview" class="preview-qr hidden"><br><button class="primary" onclick="savePayment()">Lưu thông tin</button></div></div></section>
+<section id="accounts" class="hidden"><h2>👥 Tài khoản truy cập</h2><p class="small">Admin quản lý tài khoản. Nhân viên chỉ xem đơn, không thấy TK/MK.</p><div id="accountTable"></div><div class="card"><h3>Thêm tài khoản</h3><div class="grid"><label>Tên đăng nhập<input id="newUser"></label><label>Mật khẩu<input id="newPass" type="password"></label><label>Vai trò<select id="newRole"><option value="user">Nhân viên</option><option value="admin">Admin</option></select></label></div><br><button class="primary" onclick="addAccount()">Thêm tài khoản</button></div></section>
+<section id="settings" class="hidden"><h2>⚙️ Giao diện & liên hệ</h2><div class="settings-grid"><div class="card"><h3>Giao diện</h3><button onclick="setTheme('light')">☀️ Sáng</button> <button onclick="setTheme('dark')">🌙 Tối</button></div><div class="card"><h3>Facebook của bạn</h3><input id="fbUrl" style="width:100%" placeholder="https://facebook.com/..."> <br><br><button class="primary" onclick="saveFb()">Lưu link Facebook</button><p class="small">Nút Facebook sẽ xuất hiện để mọi người bấm và chuyển thẳng tới trang của bạn.</p></div></div><div class="card" style="margin-top:14px"><h3>Đổi mật khẩu tài khoản đang đăng nhập</h3><div class="passwrap"><input id="oldPass" type="password" placeholder="Mật khẩu hiện tại"><button class="eye" type="button" onclick="togglePass('oldPass',this)">👁️</button></div><div class="passwrap"><input id="changePass" type="password" placeholder="Mật khẩu mới"><button class="eye" type="button" onclick="togglePass('changePass',this)">👁️</button></div><button class="primary" onclick="changeMyPassword()">Đổi mật khẩu</button></div></section>
+</main></div>
+<div id="registerModal" class="modal hidden"><div class="modalbox" style="max-width:420px"><h3>📝 Tạo tài khoản</h3><p class="small">Tạo tài khoản cá nhân để đăng nhập và gửi đơn UP/thuê Clan.</p><label>Tên tài khoản<input id="regUser" autocomplete="username" style="width:100%;margin-top:4px"></label><br><label>Mật khẩu<div class="passwrap"><input id="regPass" type="password" autocomplete="new-password" style="width:100%"><button class="eye" type="button" onclick="togglePass('regPass',this)">👁️</button></div></label><br><label>Nhập lại mật khẩu<div class="passwrap"><input id="regPass2" type="password" autocomplete="new-password" style="width:100%"><button class="eye" type="button" onclick="togglePass('regPass2',this)">👁️</button></div></label><p id="regMsg" class="small"></p><button class="primary" onclick="registerAccount()">Tạo tài khoản</button> <button onclick="closeRegister()">Hủy</button></div></div><div id="modal" class="modal hidden"><div class="modalbox"><h3 id="modalTitle">Thêm đơn up</h3><div class="grid"><label>TK<input id="fTk"></label><label>MK<div class="passwrap"><input id="fMk" type="password"><button class="eye" type="button" onclick="togglePass('fMk',this)">👁️</button></div></label><label>Tên nhân vật<input id="fChar"></label><label>Sever<select id="fServer"><option value="1">Sever 1</option><option value="2">Sever 2</option><option value="3">Sever 3</option><option value="4">Sever 4</option></select></label><label>Slot<input id="fSlot" type="number" value="1"></label><label>Tab<input id="fTab" value="Tab 1"></label><label>Facebook<input id="fFb"></label><label>Ngày bắt đầu<input id="fStart" type="date"></label><label>Gói<select id="fPlan"></select></label></div><br><button class="primary" onclick="saveOrder()">Lưu đơn</button> <button onclick="closeModal()">Hủy</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const KEY='htth_quoc_huy_';
+
+/* ================= CLOUD SYNC CONFIG =================
+   1) Create a free Supabase project.
+   2) Run supabase_setup.sql supplied with this package.
+   3) Paste your Project URL and anon key below.
+   The site continues to use localStorage as a fast local cache,
+   while these keys are synchronized to the shared cloud table.
+*/
 const SUPABASE_URL='https://omxwswokznzwedgmarpi.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_CVVDwSQihYLwuPofIhIC4Q_a5R3sM0v';
+const CLOUD_ENABLED=!SUPABASE_URL.startsWith('PASTE_') && !SUPABASE_ANON_KEY.startsWith('PASTE_');
+const supabaseClient = CLOUD_ENABLED ? window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY) : null;
+const CLOUD_KEYS=['orders','accounts','settings','pendingOrders','clanConfig','clanRequests'];
 
-let users=JSON.parse(localStorage.getItem(KEY+'users')||'null')||[
-{u:'huy06',p:'vuhuy123',admin:true},
-{u:'user',p:'user123',admin:false}
-];
+let current=null, editIndex=-1;
 let orders=JSON.parse(localStorage.getItem(KEY+'orders')||'[]');
-let pendingOrders=JSON.parse(localStorage.getItem(KEY+'pending')||'[]');
-let clans=JSON.parse(localStorage.getItem(KEY+'clans')||'[]');
-let notices=JSON.parse(localStorage.getItem(KEY+'notices')||'[]');
-let current=JSON.parse(sessionStorage.getItem(KEY+'current')||'null');
+let accounts=JSON.parse(localStorage.getItem(KEY+'accounts')||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
+// Chuyển tài khoản Admin mặc định cũ sang thông tin đăng nhập mới, giữ nguyên các dữ liệu khác.
+const oldAdmin=accounts.find(x=>x.admin===true&&x.u==='admin');
+if(oldAdmin){oldAdmin.u='huy06';oldAdmin.p='vuhuy123';localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));}
+let settings=JSON.parse(localStorage.getItem(KEY+'settings')||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
+let pendingOrders=JSON.parse(localStorage.getItem(KEY+'pendingOrders')||'[]');
+const defaultClanFactions=[{id:'xathu',name:'Xạ thủ'},{id:'kiemkhach',name:'Kiếm khách'},{id:'hoatieu',name:'Hoa tiêu'},{id:'vosi',name:'Võ sĩ'},{id:'daubep',name:'Đầu bếp'}];
+let clanConfig=JSON.parse(localStorage.getItem(KEY+'clanConfig')||'null')||{price:5000,clans:{ts2:{name:'CLAN TS2 LV13',notice:'',img:'',available:true},ts4:{name:'CLAN TS4 LV11',notice:'',img:'',available:true}}};
+if(!clanConfig.clans) clanConfig.clans={ts2:{name:'CLAN TS2 LV13',notice:'',img:'',available:true},ts4:{name:'CLAN TS4 LV11',notice:'',img:'',available:true}};
+Object.values(clanConfig.clans).forEach(c=>{if(!c.factions)c.factions={};defaultClanFactions.forEach(f=>{if(typeof c.factions[f.id]!=='boolean')c.factions[f.id]=true})});
+if(clanConfig.items){Object.values(clanConfig.clans).forEach(c=>defaultClanFactions.forEach(f=>{const old=clanConfig.items.find(x=>x.id===f.id);if(old&&typeof old.available==='boolean')c.factions[f.id]=old.available}));delete clanConfig.items;localStorage.setItem(KEY+'clanConfig',JSON.stringify(clanConfig));cloudSyncKey('clanConfig',clanConfig);}
+let clanRequests=JSON.parse(localStorage.getItem(KEY+'clanRequests')||'[]');
+clanRequests=clanRequests.map(x=>({...x,type:x.type||'clan',start:x.start||new Date().toISOString().slice(0,10),char:x.char||'',fb:x.fb||''}));
 
-const $=id=>document.getElementById(id);
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function save(k,v){localStorage.setItem(KEY+k,JSON.stringify(v))}
-function savePending(){save('pending',pendingOrders)}
-function cloudSyncKey(k,v){return Promise.resolve()}
-function fmt(d){if(!d)return'';let x=new Date(d);return isNaN(x)?d:x.toLocaleDateString('vi-VN')}
-function endDate(o){let d=new Date(o.start);d.setMonth(d.getMonth()+Number(o.months||1));return d}
-function status(o){let e=endDate(o),now=new Date();if(e<now)return['Hết hạn','bad'];let diff=Math.ceil((e-now)/86400000);if(diff<=7)return['Sắp hết hạn','warn'];return['Đang UP','ok']}
-function login(){
-let u=$('loginU').value.trim(),p=$('loginP').value;
-let found=users.find(x=>x.u===u&&x.p===p);
-if(!found)return alert('Sai tài khoản hoặc mật khẩu');
-current=found;sessionStorage.setItem(KEY+'current',JSON.stringify(current));
-$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
-$('userBox').textContent=(current.admin?'Admin: ':'Tài khoản: ')+current.u;
-if(!current.admin){
-$('nav-pending').classList.add('hidden');
-$('nav-orders').classList.add('hidden');
-$('nav-editClan').classList.add('hidden');
+if(!orders.length) orders=[{tk:'demo123',mk:'matkhau',char:'Hắc Long',server:'1',fb:'Nguyễn Văn A',slot:2,tab:'Tab 1',start:new Date().toISOString().slice(0,10),months:1}];
+for(let m=1;m<=12;m++){let o=document.createElement('option');o.value=m;o.textContent=m===12?'12 tháng (1 năm)':m+' tháng';fPlan.appendChild(o)}
+for(let m=1;m<=12;m++){let o=document.createElement('option');o.value=m;o.textContent=m+' tháng - '+(m*6000).toLocaleString('vi-VN')+'đ';pPlan.appendChild(o)}
+applyTheme(); renderNotice(); renderPayment();
+setInterval(()=>{if(current&&CLOUD_ENABLED)refreshCloudAndRender()},30000);
+bootstrapCloud();
+
+let cloudWriteTimer=null;
+let cloudReady=false;
+
+function cloudKey(name){return KEY+name}
+
+async function cloudLoadAll(){
+  if(!CLOUD_ENABLED)return;
+  try{
+    const {data,error}=await supabaseClient.from('app_store').select('key,value');
+    if(error)throw error;
+    if(Array.isArray(data)){
+      for(const row of data){
+        if(CLOUD_KEYS.includes(row.key)){
+          localStorage.setItem(cloudKey(row.key),JSON.stringify(row.value));
+        }
+      }
+      // Reload the in-memory values from the shared database.
+      orders=JSON.parse(localStorage.getItem(cloudKey('orders'))||'[]');
+      accounts=JSON.parse(localStorage.getItem(cloudKey('accounts'))||'null')||[{u:'huy06',p:'vuhuy123',admin:true},{u:'user',p:'user123',admin:false}];
+      settings=JSON.parse(localStorage.getItem(cloudKey('settings'))||'null')||{theme:'light',fb:'',notice:'',bank:'',number:'',owner:'',content:'',qr:''};
+      pendingOrders=JSON.parse(localStorage.getItem(cloudKey('pendingOrders'))||'[]');
+      clanConfig=JSON.parse(localStorage.getItem(cloudKey('clanConfig'))||'null')||clanConfig;
+      clanRequests=JSON.parse(localStorage.getItem(cloudKey('clanRequests'))||'[]');
+    }
+    cloudReady=true;
+  }catch(e){
+    console.error('Cloud load error:',e);
+    cloudReady=false;
+  }
 }
-render();showPage('dashboard')
+
+async function cloudSave(name,value){
+  if(!CLOUD_ENABLED || !cloudReady)return;
+  try{
+    const {error}=await supabaseClient.from('app_store').upsert({
+      key:name,
+      value:value,
+      updated_at:new Date().toISOString()
+    },{onConflict:'key'});
+    if(error)throw error;
+  }catch(e){console.error('Cloud save error for '+name+':',e);}
 }
-function logout(){sessionStorage.removeItem(KEY+'current');location.reload()}
-function showPage(p){
-document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
-$('page-'+p).classList.remove('hidden');
-document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
-$('nav-'+p)?.classList.add('active');
-let titles={dashboard:'Tổng quan',pending:'Chờ duyệt',orders:'Quản lý đơn',personal:'Cá nhân',clan:'Cho thuê Clan',editClan:'Sửa cho thuê Clan',expiring:'Sắp hết hạn',notify:'Thông báo',transfer:'Chuyển khoản',account:'Tài khoản',theme:'Giao diện'};
-$('pageTitle').textContent=titles[p]||p;
-if(p==='personal')renderPersonal();
-if(p==='clan'||p==='editClan')renderClans();
-if(p==='notify')renderNotices();
+
+function cloudSyncKey(name,value){
+  if(!CLOUD_ENABLED)return;
+  clearTimeout(cloudWriteTimer);
+  cloudWriteTimer=setTimeout(()=>cloudSave(name,value),250);
 }
-function render(){
-$('stOrders').textContent=orders.length;
-$('stPending').textContent=pendingOrders.length;
-$('stExpiring').textContent=orders.filter(o=>status(o)[0]==='Sắp hết hạn').length;
-$('stClan').textContent=clans.length;
-renderPending();renderOrders();renderClans();renderExpiring();
+
+async function pushAllToCloud(){
+  if(!CLOUD_ENABLED)return;
+  cloudReady=true;
+  await Promise.all([
+    cloudSave('orders',orders),
+    cloudSave('accounts',accounts),
+    cloudSave('settings',settings),
+    cloudSave('pendingOrders',pendingOrders),
+    cloudSave('clanConfig',clanConfig),
+    cloudSave('clanRequests',clanRequests)
+  ]);
 }
-function renderPending(){
-let box=$('pendingTable');
-if(!pendingOrders.length){box.innerHTML='<p class="small">Không có đơn chờ duyệt.</p>';return}
-box.innerHTML='<table><tr><th>TK</th><th>MK</th><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Gói</th><th>Ngày gửi</th><th>Trạng thái</th><th>Thao tác</th></tr>'+
-pendingOrders.map((o,i)=>`<tr>
-<td>${esc(o.tk)}</td>
-<td><div class="passwrap"><input type="password" value="${esc(o.mk)}" readonly><button class="eye" type="button" onclick="togglePassInput(this)">👁️</button></div></td>
-<td>${esc(o.char)}</td>
-<td>Sever ${esc(o.server||'1')}</td>
-<td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td>
-<td>${esc(o.months||1)} tháng</td>
-<td>${fmt(o.submitted)}</td>
-<td><span class="badge pending-badge">${esc(o.status||'Chờ duyệt')}</span></td>
-<td>${current?.admin?`<button class="btn success" onclick="approvePending(${i})">Duyệt</button> <button class="btn danger" onclick="rejectPending(${i})">Từ chối</button>`:''}</td>
-</tr>`).join('')+'</table>';
+
+async function refreshCloudAndRender(){
+  if(!CLOUD_ENABLED)return;
+  await cloudLoadAll();
+  applyTheme();
+  renderNotice();
+  renderPayment();
+  if(current){
+    if(document.getElementById('personal') && !document.getElementById('personal').classList.contains('hidden'))renderPersonal();
+    if(document.getElementById('pending') && !document.getElementById('pending').classList.contains('hidden'))renderPending();
+    render();
+  }
 }
-function renderOrders(){
-let box=$('ordersTable');
-if(!orders.length){box.innerHTML='<p class="small">Chưa có đơn UP.</p>';return}
-box.innerHTML='<table><tr><th>TK</th><th>MK</th><th>Tên nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th>Thao tác</th></tr>'+
-orders.map((o,i)=>{let st=status(o);return `<tr>
-<td>${esc(o.tk)}</td>
-<td><div class="passwrap"><input type="password" value="${esc(o.mk)}" readonly><button class="eye" type="button" onclick="togglePassInput(this)">👁️</button></div></td>
-<td>${esc(o.char)}</td>
-<td>Sever ${esc(o.server||'1')}</td>
-<td>${esc(o.slot||1)}</td>
-<td>${esc(o.tab||'')}</td>
-<td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td>
-<td>${fmt(o.start)}</td>
-<td>${fmt(endDate(o))}</td>
-<td><span class="badge ${st[1]}">${st[0]}</span></td>
-<td>${current?.admin?`<button class="btn danger" onclick="deleteOrder(${i})">Xóa</button>`:''}</td>
-</tr>`}).join('')+'</table>';
+async function bootstrapCloud(){
+  if(!CLOUD_ENABLED){
+    console.warn('Supabase chưa được cấu hình. Website đang chạy ở chế độ local.');
+    return;
+  }
+  await cloudLoadAll();
+  // Migrate an existing local copy only when the cloud is empty.
+  const {data}=await supabaseClient.from('app_store').select('key').limit(1);
+  if(!data || data.length===0){
+    await pushAllToCloud();
+  }
+  applyTheme();
+  renderNotice();
+  renderPayment();
+  restoreLogin();
 }
+
+function openRegister(){regUser.value='';regPass.value='';regPass2.value='';regMsg.textContent='';registerModal.classList.remove('hidden')}
+function closeRegister(){registerModal.classList.add('hidden')}
+function registerAccount(){const u=regUser.value.trim(),p=regPass.value,p2=regPass2.value;regMsg.style.color='#dc2626';if(!/^[A-Za-z0-9_.-]{3,30}$/.test(u))return regMsg.textContent='Tên tài khoản 3-30 ký tự, chỉ dùng chữ, số, ., _, -';if(!p||p.length<4)return regMsg.textContent='Mật khẩu phải có ít nhất 4 ký tự';if(p!==p2)return regMsg.textContent='Mật khẩu nhập lại không khớp';if(accounts.some(a=>a.u.toLowerCase()===u.toLowerCase()))return regMsg.textContent='Tên tài khoản đã tồn tại';accounts.push({u,p,admin:false});saveAccounts();regMsg.style.color='#166534';regMsg.textContent='Tạo tài khoản thành công. Bạn có thể đăng nhập ngay.';setTimeout(()=>{loginUser.value=u;loginPass.value='';closeRegister()},500)}
+function recoverAccounts(){const u=prompt('Nhập TÊN TÀI KHOẢN cần khôi phục:');if(!u)return;const a=accounts.find(x=>x.u===u.trim());if(!a){loginMsg.textContent='Không tìm thấy tài khoản này';return}const np=a.admin===true?'vuhuy123':'user123';a.p=np;saveAccounts();loginUser.value=a.u;loginPass.value=np;loginMsg.style.color='#166534';loginMsg.textContent='Đã khôi phục mật khẩu cho '+a.u+'. Mật khẩu mới: '+np}
+async function doLogin(){
+  const u=loginUser.value.trim(),p=loginPass.value;
+  if(CLOUD_ENABLED)await cloudLoadAll();
+  const a=accounts.find(x=>x.u===u&&x.p===p);
+  if(!a){loginMsg.textContent='Sai tài khoản hoặc mật khẩu';return}
+  current={...a};
+  localStorage.setItem(KEY+'session',JSON.stringify({u:current.u,admin:!!current.admin}));
+  login.classList.add('hidden');app.classList.remove('hidden');
+  role.textContent=current.admin?'👑 Admin: '+current.u:'👤 Tài khoản: '+current.u;
+  adminNav.classList.toggle('hidden',!current.admin);settingsNav.classList.toggle('hidden',!current.admin);
+  addBtn.classList.toggle('hidden',!current.admin);noticeAdmin.classList.toggle('hidden',!current.admin);
+  paymentAdmin.classList.toggle('hidden',!current.admin);pendingNav.classList.toggle('hidden',!current.admin);
+  ordersNav.classList.toggle('hidden',!current.admin);personalNav.classList.toggle('hidden',current.admin);
+  clanNav.classList.toggle('hidden',current.admin);clanManageNav.classList.toggle('hidden',!current.admin);
+  clanRequestsWrap.classList.toggle('hidden',current.admin);globalFb.classList.toggle('hidden',!settings.fb);
+  showPage(current.admin?'dashboard':'personal');render();
+}
+function restoreLogin(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY+'session')||'null');
+    if(!s)return;
+    const a=accounts.find(x=>x.u===s.u && !!x.admin===!!s.admin);
+    if(a){
+      current={...a};
+      login.classList.add('hidden');app.classList.remove('hidden');
+      role.textContent=current.admin?'👑 Admin: '+current.u:'👤 Tài khoản: '+current.u;
+      adminNav.classList.toggle('hidden',!current.admin);settingsNav.classList.toggle('hidden',!current.admin);
+      addBtn.classList.toggle('hidden',!current.admin);noticeAdmin.classList.toggle('hidden',!current.admin);
+      paymentAdmin.classList.toggle('hidden',!current.admin);pendingNav.classList.toggle('hidden',!current.admin);
+      ordersNav.classList.toggle('hidden',!current.admin);personalNav.classList.toggle('hidden',current.admin);
+      clanNav.classList.toggle('hidden',current.admin);clanManageNav.classList.toggle('hidden',!current.admin);
+      clanRequestsWrap.classList.toggle('hidden',current.admin);globalFb.classList.toggle('hidden',!settings.fb);
+      showPage(current.admin?'dashboard':'personal');render();
+    }
+  }catch(e){}
+}
+function logout(){localStorage.removeItem(KEY+'session');location.reload()}
+function showPage(id){['dashboard','pending','orders','personal','clan','clanManage','expiring','notice','transfer','accounts','settings'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));if(id==='pending')renderPending();if(id==='expiring')renderExpiring();if(id==='orders'){showOrderTab('up');render();}if(id==='personal')renderPersonal();if(id==='clan')renderClan();if(id==='clanManage')renderClanManage();if(id==='notice')renderNotice();if(id==='transfer')renderPayment();if(id==='accounts')renderAccounts();if(id==='settings'){fbUrl.value=settings.fb||''}}
+function endDate(o){let d=new Date(o.start+'T00:00:00');d.setMonth(d.getMonth()+Number(o.months));return d}function clanEndDate(o){let d=new Date(o.start+'T00:00:00');d.setMonth(d.getMonth()+Number(o.months));return d}function showOrderTab(tab){if(!current?.admin)return;orderUpPanel.classList.toggle('hidden',tab!=='up');orderClanPanel.classList.toggle('hidden',tab!=='clan');if(tab==='up')render();else renderClanOrdersTable()}function daysLeft(o){return Math.ceil((endDate(o)-new Date())/86400000)}function status(o){let d=daysLeft(o);if(d<0)return ['Đã hết hạn','expired'];if(d<=3)return ['🚨 Hết hạn trong '+d+' ngày','warn'];if(d<=7)return ['⚠️ Sắp hết hạn','warn'];return ['🟢 Đang up','ok']}function fmt(d){return new Date(d).toLocaleDateString('vi-VN')}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){let q=(search?.value||'').toLowerCase();let arr=orders.filter(o=>(o.tk+' '+o.char+' '+o.fb+' '+o.server).toLowerCase().includes(q));let rows=arr.map(o=>{let s=status(o),idx=orders.indexOf(o);return `<tr><td>${idx+1}</td>${current.admin?`<td>${esc(o.tk)}</td><td>${esc(o.mk)}</td>`:''}<td>${esc(o.char)}</td><td>Sever ${esc(o.server||'1')}</td><td>${esc(o.slot)}</td><td>${esc(o.tab)}</td><td>${o.fb?`<a class="fb-link" href="${esc(o.fb.startsWith('http')?o.fb:'#')}" target="_blank">${esc(o.fb)}</a>`:''}</td><td>${fmt(o.start)}</td><td>${fmt(endDate(o))}</td><td><span class="badge ${s[1]}">${s[0]}</span></td>${current.admin?`<td><button onclick="editOrder(${idx})">Sửa</button> <button class="danger" onclick="del(${idx})">Xóa</button></td>`:''}</tr>`}).join('');let head=`<tr><th>#</th>${current.admin?'<th>TK</th><th>MK</th>':''}<th>Tên nhân vật</th><th>Sever</th><th>Slot</th><th>Tab</th><th>Facebook</th><th>Bắt đầu</th><th>Hết hạn</th><th>Trạng thái</th>${current.admin?'<th>Thao tác</th>':''}</tr>`;table.innerHTML='<table>'+head+rows+'</table>';updateStats()}
+function updateStats(){total.textContent=orders.length;adminPendingNotice.innerHTML=current?.admin&&(pendingOrders.length+clanRequests.filter(x=>x.status==='Chờ duyệt').length)?`<div class="notice"><b>🕐 Có ${pendingOrders.length+clanRequests.filter(x=>x.status==='Chờ duyệt').length} đơn đang chờ duyệt.</b> <button onclick="showPage('pending')">Xem đơn</button></div>`:'';active.textContent=orders.filter(o=>daysLeft(o)>=0).length;soon.textContent=orders.filter(o=>daysLeft(o)>=0&&daysLeft(o)<=7).length;expired.textContent=orders.filter(o=>daysLeft(o)<0).length;dashboardNotice.innerHTML=settings.notice?`<div class="notice"><h3>📢 ${esc(settings.notice)}</h3></div>`:''}
+function renderExpiring(){let arr=orders.filter(o=>daysLeft(o)>=0&&daysLeft(o)<=7);expireTable.innerHTML=arr.length?'<table><tr><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Hết hạn</th><th>Còn</th></tr>'+arr.map(o=>`<tr><td>${esc(o.char)}</td><td>Sever ${esc(o.server||'1')}</td><td>${esc(o.fb)}</td><td>${fmt(endDate(o))}</td><td>⚠️ ${daysLeft(o)} ngày</td></tr>`).join('')+'</table>':'<div class="card">Hiện chưa có đơn nào hết hạn trong 7 ngày tới.</div>'}
+function openModal(idx=-1){editIndex=idx;modalTitle.textContent=idx<0?'Thêm đơn up':'Sửa đơn up';let o=idx<0?{slot:1,tab:'Tab 1',server:'1',months:1,start:new Date().toISOString().slice(0,10)}:orders[idx];fTk.value=o.tk||'';fMk.value=o.mk||'';fChar.value=o.char||'';fServer.value=o.server||'1';fSlot.value=o.slot||1;fTab.value=o.tab||'Tab 1';fFb.value=o.fb||'';fStart.value=o.start||'';fPlan.value=o.months||1;modal.classList.remove('hidden')}
+function editOrder(i){openModal(i)}function closeModal(){modal.classList.add('hidden');editIndex=-1}
+function saveOrder(){let o={tk:fTk.value.trim(),mk:fMk.value,char:fChar.value.trim(),server:fServer.value,slot:fSlot.value,tab:fTab.value.trim(),fb:fFb.value.trim(),start:fStart.value,months:Number(fPlan.value)};if(!o.tk||!o.mk||!o.char||!o.start){alert('Vui lòng nhập TK, MK, nhân vật và ngày bắt đầu');return}if(editIndex<0)orders.push(o);else orders[editIndex]=o;localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);closeModal();render()}
+function del(i){if(confirm('Xóa đơn này?')){orders.splice(i,1);localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);render()}}
+function togglePass(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁️':'🙈'}
+function savePending(){localStorage.setItem(KEY+'pendingOrders',JSON.stringify(pendingOrders));cloudSyncKey('pendingOrders',pendingOrders)}
 function submitUpOrder(){if(current.admin)return alert('Admin không cần gửi đơn UP');let o={id:Date.now(),type:'up',owner:current.u,tk:pTk.value.trim(),mk:pMk.value,char:pChar.value.trim(),server:pServer.value,slot:1,tab:'',fb:pFb.value.trim(),months:Number(pPlan.value),start:new Date().toISOString().slice(0,10),submitted:new Date().toISOString(),status:'Chờ duyệt'};if(!o.tk||!o.mk||!o.char)return alert('Vui lòng nhập TK, MK và tên nhân vật');pendingOrders.push(o);savePending();pTk.value=pMk.value=pChar.value=pFb.value='';alert('Đã gửi đơn, đang chờ Admin duyệt');renderPersonal()}
-function approvePending(i){let p=pendingOrders[i];let o={tk:p.tk,mk:p.mk,char:p.char,server:p.server,fb:p.fb,slot:p.slot||1,tab:p.tab||'',start:p.start||new Date().toISOString().slice(0,10),months:p.months,owner:p.owner};orders.push(o);pendingOrders.splice(i,1);localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);savePending();renderPending();render();alert('Đã duyệt và chuyển tự động sang Quản lý đơn UP')}
-function rejectPending(i){if(!confirm('Từ chối đơn này?'))return;pendingOrders.splice(i,1);savePending();renderPending();render();alert('Đã từ chối đơn')}
-function deleteOrder(i){if(!confirm('Xóa đơn này?'))return;orders.splice(i,1);save('orders',orders);render()}
 function renderPersonal(){
   if(!current||current.admin)return;
   myUsername.textContent=current.u;
@@ -326,79 +276,33 @@ function togglePassInput(btn){
   btn.textContent=input.type==='password'?'👁️':'🙈';
 }
 
-function renderClans(){
-let box=$('clanTable'),edit=$('editClanTable');
-if(!clans.length){
-box.innerHTML='<p class="small">Chưa có Clan nào.</p>';
-if(edit)edit.innerHTML='<p class="small">Chưa có Clan nào.</p>';
-return;
-}
-box.innerHTML='<table><tr><th>Tên Clan</th><th>Sever</th><th>Giá thuê</th><th>Liên hệ</th><th>Mô tả</th></tr>'+
-clans.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.server)}</td><td>${Number(c.price||0).toLocaleString('vi-VN')}đ</td><td>${esc(c.contact)}</td><td>${esc(c.desc)}</td></tr>`).join('')+'</table>';
-if(edit){
-edit.innerHTML='<table><tr><th>Tên Clan</th><th>Sever</th><th>Giá</th><th>Liên hệ</th><th>Thao tác</th></tr>'+
-clans.map((c,i)=>`<tr><td>${esc(c.name)}</td><td>${esc(c.server)}</td><td>${Number(c.price||0).toLocaleString('vi-VN')}đ</td><td>${esc(c.contact)}</td><td>${current?.admin?`<button class="btn danger" onclick="deleteClan(${i})">Xóa</button>`:''}</td></tr>`).join('')+'</table>';
-}
-}
-function addClan(){
-let c={id:Date.now(),name:$('cName').value.trim(),server:$('cServer').value.trim(),price:Number($('cPrice').value||0),contact:$('cContact').value.trim(),desc:$('cDesc').value.trim()};
-if(!c.name)return alert('Nhập tên Clan');
-clans.push(c);save('clans',clans);$('cName').value=$('cServer').value=$('cPrice').value=$('cContact').value=$('cDesc').value='';renderClans();render()
-}
-function deleteClan(i){if(!confirm('Xóa Clan này?'))return;clans.splice(i,1);save('clans',clans);renderClans();render()}
-function renderExpiring(){
-let box=$('expiringTable'),arr=orders.filter(o=>status(o)[0]==='Sắp hết hạn');
-if(!arr.length){box.innerHTML='<p class="small">Không có nick sắp hết hạn.</p>';return}
-box.innerHTML='<table><tr><th>TK</th><th>Nhân vật</th><th>Sever</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+
-arr.map(o=>{let st=status(o);return `<tr><td>${esc(o.tk)}</td><td>${esc(o.char)}</td><td>Sever ${esc(o.server||'1')}</td><td>${fmt(endDate(o))}</td><td><span class="badge ${st[1]}">${st[0]}</span></td></tr>`}).join('')+'</table>';
-}
-function renderNotices(){
-let box=$('notifyList');
-if(!notices.length){box.innerHTML='<p class="small">Chưa có thông báo.</p>';return}
-box.innerHTML=notices.map(n=>`<div class="notice"><b>${esc(n.title||'Thông báo')}</b><div>${esc(n.text||'')}</div><div class="small">${fmt(n.date)}</div></div>`).join('');
-}
-function changePass(){
-let a=$('newPass').value,b=$('newPass2').value;
-if(!a)return alert('Nhập mật khẩu mới');
-if(a!==b)return alert('Mật khẩu nhập lại không khớp');
-let u=users.find(x=>x.u===current.u);if(!u)return;
-u.p=a;save('users',users);alert('Đổi mật khẩu thành công');$('newPass').value=$('newPass2').value=''
-}
-function applyTheme(){
-document.body.style.background=$('themeBg').value;
-document.body.style.color=$('themeText').value;
-localStorage.setItem(KEY+'theme',JSON.stringify({bg:$('themeBg').value,text:$('themeText').value}));
-alert('Đã lưu giao diện');
-}
-function loadTheme(){
-let t=JSON.parse(localStorage.getItem(KEY+'theme')||'null');
-if(t){
-document.body.style.background=t.bg;
-document.body.style.color=t.text;
-$('themeBg').value=t.bg;
-$('themeText').value=t.text;
-}
-}
-function toast(msg){
-let t=$('toast');
-t.textContent=msg;
-t.style.display='block';
-setTimeout(()=>t.style.display='none',2500)
-}
-
-if(current){
-$('loginView').classList.add('hidden');
-$('appView').classList.remove('hidden');
-$('userBox').textContent=(current.admin?'Admin: ':'Tài khoản: ')+current.u;
-if(!current.admin){
-$('nav-pending').classList.add('hidden');
-$('nav-orders').classList.add('hidden');
-$('nav-editClan').classList.add('hidden');
-}
-}
-loadTheme();
-render();
-if(current)showPage('dashboard');
-</script>
-</body>
-</html>
+function renderPending(){if(!current?.admin)return;pendingTable.innerHTML=pendingOrders.length?'<table><tr><th>TK</th><th>MK</th><th>Nhân vật</th><th>Sever</th><th>Facebook</th><th>Gói</th><th>Người gửi</th><th>Trạng thái</th><th>Thao tác</th></tr>'+pendingOrders.map((o,i)=>`<tr><td>${esc(o.tk)}</td><td><div class=\"passwrap\"><input id=\"pmk${i}\" type=\"password\" value=\"${esc(o.mk)}\" readonly><button class=\"eye\" onclick=\"togglePass('pmk${i}',this)\">👁️</button></div></td><td>${esc(o.char)}</td><td>Sever ${esc(o.server)}</td><td>${esc(o.fb)}</td><td>${o.months} tháng</td><td>${esc(o.owner)}</td><td>${esc(o.status)}</td><td><button class=\"primary\" onclick=\"approvePending(${i})\">Duyệt</button> <button class=\"danger\" onclick=\"rejectPending(${i})\">Từ chối</button></td></tr>`).join('')+'</table>':'<div class=\"small\">Không có đơn UP chờ duyệt.</div>';renderPendingClan();}
+function renderPendingClan(){if(!current?.admin)return;let a=clanRequests.filter(x=>x.status==='Chờ duyệt');pendingClanTable.innerHTML=a.length?'<table><tr><th>Tài khoản</th><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th>Thao tác</th></tr>'+a.map((x)=>{let i=clanRequests.indexOf(x);return `<tr><td>${esc(x.owner)}</td><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td><td><button class="primary" onclick="approveClan(${i})">Duyệt</button> <button class="danger" onclick="rejectClan(${i})">Từ chối</button></td></tr>`}).join('')+'</table>':'<div class="small">Không có đơn Clan chờ duyệt.</div>'}
+function approvePending(i){let p=pendingOrders[i];let o={tk:p.tk,mk:p.mk,char:p.char,server:p.server,fb:p.fb,slot:p.slot||1,tab:p.tab||'',start:p.start||new Date().toISOString().slice(0,10),months:p.months,owner:p.owner};orders.push(o);pendingOrders.splice(i,1);localStorage.setItem(KEY+'orders',JSON.stringify(orders));cloudSyncKey('orders',orders);savePending();renderPending();render();alert('Đã duyệt và chuyển tự động sang Quản lý đơn UP')}
+function rejectPending(i){if(!confirm('Từ chối đơn UP này?'))return;pendingOrders.splice(i,1);savePending();renderPending()}
+function saveClan(){localStorage.setItem(KEY+'clanConfig',JSON.stringify(clanConfig));cloudSyncKey('clanConfig',clanConfig)}
+function clanPrice(m){return Number(clanConfig.price||5000)*m}
+function renderClan(){if(current.admin)return;renderClanUser();renderMyClanRequests()}
+function renderClanUser(){let c=clanConfig.clans;let cards=Object.entries(c).filter(([,x])=>x.available).map(([id,x])=>{let chips=defaultClanFactions.map(f=>`<span class="badge ${x.factions?.[f.id]?'ok':'muted'}" style="margin:3px;display:inline-block">${x.factions?.[f.id]?'🟢':'🔴'} ${f.name} ${x.factions?.[f.id]?'Còn chỗ':'Đã full'}</span>`).join('');return `<div class="clan-card">${x.img?`<img src="${x.img}" alt="${esc(x.name)}">`:''}<h3>${esc(x.name)}</h3><div class="notice"><b>📢 Thông báo</b><br>${esc(x.notice||'Chưa có thông báo.').replace(/\n/g,'<br>')}</div><div><b>Phái:</b><div style="margin:7px 0 12px">${chips}</div></div><button class="primary" onclick="chooseClan('${id}')">Chọn Clan</button></div>`}).join('');clanUserView.innerHTML=cards?'<div class="clan-grid">'+cards+'</div>':'<div class="card">Hiện chưa có Clan đang cho thuê.</div>'}
+function chooseClan(clanId){let c=clanConfig.clans[clanId];let factions=defaultClanFactions.filter(x=>c.factions?.[x.id]);if(!factions.length)return alert('Clan này hiện đã FULL tất cả phái.');let char=prompt('Nhập tên nhân vật:','');if(!char)return;let fb=prompt('Nhập Facebook:','');if(!fb)return;let opts=factions.map((x,i)=>`${i+1}. ${x.name} — Còn chỗ`).join('\n');let n=Number(prompt('Chọn phái bằng số:\n'+opts,'1'));if(!Number.isInteger(n)||n<1||n>factions.length)return;let f=factions[n-1];let m=Number(prompt('Nhập số tháng thuê (1-12):','1'));if(!Number.isInteger(m)||m<1||m>12)return alert('Thời gian phải từ 1 đến 12 tháng');let price=clanPrice(m),start=new Date().toISOString().slice(0,10);if(confirm(`${c.name}\nNhân vật: ${char}\nPhái: ${f.name}\n${m} tháng = ${price.toLocaleString('vi-VN')}đ\nBắt đầu: ${fmt(start)}\nKết thúc: ${fmt(clanEndDate({start,months:m}))}\n\nGửi đơn chờ Admin duyệt?`)){clanRequests.push({id:Date.now(),type:'clan',owner:current.u,char,fb,clanId,clanName:c.name,factionId:f.id,factionName:f.name,months:m,price,start,status:'Chờ duyệt'});localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderMyClanRequests();alert('Đã gửi đơn thuê Clan, đang chờ Admin duyệt')}}
+function renderMyClanRequests(){let a=clanRequests.filter(x=>x.owner===current.u);myClanRequests.innerHTML=a.length?'<table><tr><th>Clan</th><th>Phái</th><th>Thời gian</th><th>Giá</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.clanName)}</td><td>${esc(x.factionName||x.clanName)}</td><td>${x.months} tháng</td><td>${x.price.toLocaleString('vi-VN')}đ</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<p class="small">Chưa có yêu cầu thuê Clan.</p>'}
+function renderClanManage(){if(!current?.admin)return;clanAdmin.innerHTML='<div class="card"><h3>⚙️ Sửa cho thuê Clan</h3><p class="small">Admin có thể đóng/mở từng Clan, cập nhật ảnh + thông báo và đánh dấu từng phái là <b>Đang còn</b> hoặc <b>Đã full</b>. Người thuê sẽ thấy đúng thông tin này.</p><label>Giá mỗi tháng <input id="clanPriceInput" type="number" value="'+clanConfig.price+'"> đ/tháng</label><p class="small">Giá mặc định 5.000đ/tháng, tự nhân theo số tháng đến 12 tháng.</p><div class="clan-grid">'+Object.entries(clanConfig.clans).map(([id,x])=>`<div class="clan-card"><h3>${esc(x.name)}</h3><label>📢 Thông báo cho người thuê<textarea id="notice_${id}" rows="4" style="width:100%" placeholder="Ví dụ: Clan đang tuyển Xạ thủ, bảo trì lúc 22h...">${esc(x.notice||'')}</textarea></label><p><b>🖼️ Ảnh Clan</b></p><input type="file" accept="image/*" onchange="loadClanGroupImage(this,'${id}')">${x.img?`<img src="${x.img}" alt="Ảnh ${esc(x.name)}"><br><button type="button" onclick="removeClanGroupImage('${id}')">Xóa ảnh</button>`:'<p class="small">Chưa có ảnh. Chọn ảnh để người thuê nhìn thấy.</p>'}<br><label><input type="checkbox" ${x.available?'checked':''} onchange="clanConfig.clans['${id}'].available=this.checked;saveClan();renderClanManage()"> 🟢 Cho phép thuê Clan này</label><hr><b>Trạng thái từng phái</b><div style="margin-top:8px">${defaultClanFactions.map(f=>`<label style="display:block;margin:7px 0"><input type="checkbox" ${x.factions?.[f.id]?'checked':''} onchange="setClanFaction('${id}','${f.id}',this.checked)"> ${esc(f.name)} — <b>${x.factions?.[f.id]?'Còn chỗ':'Đã full'}</b></label>`).join('')}</div></div>`).join('')+'</div><br><button class="primary" onclick="saveClanConfig()">💾 Lưu cấu hình Clan</button></div>';clanManageRequests.innerHTML=renderClanAdminRequests()}
+function setClanFaction(clanId,factionId,available){clanConfig.clans[clanId].factions[factionId]=available;saveClan();renderClanManage()}
+function renderClanAdminRequests(){let a=clanRequests;return a.length?'<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<p>Chưa có đơn.</p>'}function renderClanOrdersTable(){let a=clanRequests;clanOrdersTable.innerHTML=a.length?'<table><tr><th>Tên nhân vật</th><th>Facebook</th><th>Clan</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th></tr>'+a.map(x=>`<tr><td>${esc(x.char||'')}</td><td>${x.fb?`<a class="fb-link" href="${esc(x.fb.startsWith('http')?x.fb:'#')}" target="_blank">${esc(x.fb)}</a>`:''}</td><td>${esc(x.clanName)}</td><td>${fmt(x.start)}</td><td>${fmt(clanEndDate(x))}</td><td>${esc(x.status)}</td></tr>`).join('')+'</table>':'<div class="small">Chưa có đơn thuê Clan.</div>'}
+function saveClanConfig(){clanConfig.price=Math.max(0,Number(clanPriceInput.value)||5000);Object.keys(clanConfig.clans).forEach(id=>{let el=document.getElementById('notice_'+id);if(el)clanConfig.clans[id].notice=el.value.trim()});saveClan();renderClanManage();alert('Đã lưu cấu hình Clan')}
+function loadClanGroupImage(input,id){let f=input.files[0];if(!f)return;if(f.size>3*1024*1024)return alert('Ảnh quá lớn. Vui lòng chọn ảnh dưới 3MB.');let r=new FileReader();r.onload=()=>{clanConfig.clans[id].img=r.result;saveClan();renderClanManage();alert('Đã cập nhật ảnh '+clanConfig.clans[id].name+'. Người thuê sẽ thấy ảnh này.')};r.readAsDataURL(f)}
+function removeClanGroupImage(id){clanConfig.clans[id].img='';saveClan();renderClanManage()}
+function approveClan(i){clanRequests[i].status='Đã duyệt';localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderPending();renderClanManage()}
+function rejectClan(i){clanRequests[i].status='Từ chối';localStorage.setItem(KEY+'clanRequests',JSON.stringify(clanRequests));cloudSyncKey('clanRequests',clanRequests);renderPending();renderClanManage()}
+function renderNotice(){noticeContent.innerHTML=settings.notice?`<div class="notice"><h3>📢 Thông báo từ HTTH UP THUÊ QUỐC HUY</h3><div>${esc(settings.notice).replace(/\n/g,'<br>')}</div></div>`:'<div class="card">Chưa có thông báo.</div>';if(current)noticeAdmin.classList.toggle('hidden',!current.admin)}function saveNotice(){settings.notice=noticeText.value.trim();saveSettings();renderNotice();alert('Đã lưu thông báo')}function clearNotice(){settings.notice='';saveSettings();renderNotice()}
+function renderPayment(){paymentContent.innerHTML=`<h3>Thông tin chuyển khoản</h3>${settings.bank?`<p><b>Ngân hàng / ví:</b> ${esc(settings.bank)}</p>`:''}${settings.number?`<p><b>Số tài khoản / SĐT:</b> ${esc(settings.number)}</p>`:''}${settings.owner?`<p><b>Chủ tài khoản:</b> ${esc(settings.owner)}</p>`:''}${settings.content?`<p><b>Nội dung:</b> ${esc(settings.content)}</p>`:''}${settings.qr?`<img src="${settings.qr}" class="preview-qr">`:''}${!settings.bank&&!settings.number&&!settings.qr?'<p>Chưa cài đặt thông tin chuyển khoản.</p>':''}`;if(current&&current.admin){bankName.value=settings.bank||'';bankNumber.value=settings.number||'';bankOwner.value=settings.owner||'';bankContent.value=settings.content||'';if(settings.qr){qrPreview.src=settings.qr;qrPreview.classList.remove('hidden')}}}
+function loadQr(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{settings.qr=r.result;qrPreview.src=r.result;qrPreview.classList.remove('hidden')};r.readAsDataURL(f)}function savePayment(){settings.bank=bankName.value.trim();settings.number=bankNumber.value.trim();settings.owner=bankOwner.value.trim();settings.content=bankContent.value.trim();saveSettings();renderPayment();alert('Đã lưu thông tin chuyển khoản')}
+function saveSettings(){localStorage.setItem(KEY+'settings',JSON.stringify(settings));cloudSyncKey('settings',settings)}
+function renderAccounts(){accountTable.innerHTML='<table><tr><th>Tên đăng nhập</th><th>Vai trò</th><th>Thao tác</th></tr>'+accounts.map((a,i)=>`<tr><td>${esc(a.u)}</td><td>${a.admin?'Admin':'Nhân viên'}</td><td><button onclick="resetAccountPass(${i})">Đổi MK</button>${a.u!=='admin'?` <button class="danger" onclick="deleteAccount(${i})">Xóa</button>`:''}</td></tr>`).join('')+'</table>'}
+function addAccount(){let u=newUser.value.trim(),p=newPass.value,r=newRole.value;if(!u||!p)return alert('Nhập đủ tên đăng nhập và mật khẩu');if(accounts.some(a=>a.u===u))return alert('Tên đăng nhập đã tồn tại');accounts.push({u,p,admin:r==='admin'});saveAccounts();newUser.value='';newPass.value='';renderAccounts()}
+function saveAccounts(){localStorage.setItem(KEY+'accounts',JSON.stringify(accounts));cloudSyncKey('accounts',accounts)}function deleteAccount(i){if(confirm('Xóa tài khoản '+accounts[i].u+'?')){accounts.splice(i,1);saveAccounts();renderAccounts()}}function resetAccountPass(i){let p=prompt('Nhập mật khẩu mới cho '+accounts[i].u);if(p){accounts[i].p=p;saveAccounts();alert('Đã đổi mật khẩu')}}
+function changeMyPassword(){if(oldPass.value!==current.p)return alert('Mật khẩu hiện tại không đúng');if(!changePass.value)return alert('Nhập mật khẩu mới');let i=accounts.findIndex(a=>a.u===current.u);accounts[i].p=changePass.value;current.p=changePass.value;saveAccounts();oldPass.value='';changePass.value='';alert('Đổi mật khẩu thành công')}
+function saveFb(){settings.fb=fbUrl.value.trim();saveSettings();globalFb.classList.toggle('hidden',!settings.fb);alert('Đã lưu Facebook') }
+function openMyFacebook(){if(settings.fb)window.open(settings.fb,'_blank')}
+function setTheme(t){settings.theme=t;saveSettings();applyTheme()}function applyTheme(){document.body.classList.toggle('dark',settings.theme==='dark')}
+</script></body></html>
